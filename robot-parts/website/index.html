@@ -1,310 +1,131 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RoboParts — 机器人零件兼容性平台</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background-color: #0f172a;
-            color: #e2e8f0;
-            line-height: 1.6;
-        }
-
-        /* Header */
-        header {
-            background-color: #0f172a;
-            padding: 1rem 0;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 1rem;
-        }
-
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-        }
-
-        .logo {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #f59e0b;
-            text-decoration: none;
-        }
-
-        .logo span {
-            color: #3b82f6;
-        }
-
-        /* Hero Section */
-        .hero {
-            text-align: center;
-            margin-bottom: 4rem;
-        }
-
-        .hero h1 {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            background: linear-gradient(135deg, #f59e0b 0%, #3b82f6 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .hero p {
-            font-size: 1.25rem;
-            color: #94a3b8;
-            margin-bottom: 2rem;
-        }
-
-        /* Search Box */
-        .search-container {
-            position: relative;
-            max-width: 600px;
-            margin: 0 auto 3rem;
-        }
-
-        .search-box {
-            width: 100%;
-            padding: 1rem 3rem 1rem 1.5rem;
-            font-size: 1.125rem;
-            border: 2px solid #334155;
-            border-radius: 12px;
-            background-color: #1e293b;
-            color: #e2e8f0;
-            transition: all 0.3s ease;
-        }
-
-        .search-box:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-
-        .search-btn {
-            position: absolute;
-            right: 0.5rem;
-            top: 50%;
-            transform: translateY(-50%);
-            background-color: #f59e0b;
-            color: #0f172a;
-            border: none;
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .search-btn:hover {
-            background-color: #d97706;
-            transform: translateY(-50%) scale(1.05);
-        }
-
-        /* Steps Guide */
-        .steps {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 2rem;
-            margin-bottom: 4rem;
-        }
-
-        .step {
-            text-align: center;
-            padding: 2rem;
-            background-color: #1e293b;
-            border-radius: 16px;
-            transition: all 0.3s ease;
-            border: 1px solid #334155;
-        }
-
-        .step:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            border-color: #3b82f6;
-        }
-
-        .step-number {
-            display: inline-block;
-            width: 50px;
-            height: 50px;
-            background-color: #f59e0b;
-            color: #0f172a;
-            border-radius: 50%;
-            font-size: 1.5rem;
-            font-weight: bold;
-            line-height: 50px;
-            margin-bottom: 1rem;
-        }
-
-        .step h3 {
-            font-size: 1.25rem;
-            margin-bottom: 0.5rem;
-            color: #f59e0b;
-        }
-
-        .step p {
-            color: #94a3b8;
-        }
-
-        /* Popular Parts */
-        .section-title {
-            font-size: 2rem;
-            text-align: center;
-            margin-bottom: 2rem;
-            color: #e2e8f0;
-        }
-
-        .parts-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 4rem;
-        }
-
-        .part-card {
-            background-color: #1e293b;
-            border-radius: 12px;
-            overflow: hidden;
-            transition: all 0.3s ease;
-            border: 1px solid #334155;
-            cursor: pointer;
-        }
-
-        .part-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            border-color: #3b82f6;
-        }
-
-        .part-image {
-            width: 100%;
-            height: 200px;
-            background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 3rem;
-            color: #64748b;
-        }
-
-        .part-info {
-            padding: 1.5rem;
-        }
-
-        .part-name {
-            font-size: 1.125rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            color: #f59e0b;
-        }
-
-        .part-category {
-            color: #64748b;
-            font-size: 0.875rem;
-            margin-bottom: 0.75rem;
-        }
-
-        .part-stats {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .compatibility {
-            display: flex;
-            align-items: center;
-            gap: 0.25rem;
-            color: #10b981;
-            font-size: 0.875rem;
-        }
-
-        .download-btn {
-            background-color: #3b82f6;
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            font-size: 0.875rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .download-btn:hover {
-            background-color: #2563eb;
-            transform: scale(1.05);
-        }
-
-        /* Footer */
-        footer {
-            background-color: #1e293b;
-            padding: 2rem 0;
-            text-align: center;
-            border-top: 1px solid #334155;
-        }
-
-        .footer-content {
-            color: #94a3b8;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .hero h1 {
-                font-size: 2rem;
-            }
-
-            .hero p {
-                font-size: 1rem;
-            }
-
-            .steps {
-                grid-template-columns: 1fr;
-            }
-
-            .parts-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>RoboParts — 机器人零件兼容性平台</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0f172a;color:#e2e8f0;font-family:system-ui,sans-serif;line-height:1.6}
+.nav{display:flex;justify-content:space-between;align-items:center;padding:1rem 2rem;background:#1e293b;border-bottom:1px solid #334155;position:sticky;top:0;z-index:100}
+.nav-logo{font-size:1.25rem;font-weight:700;color:#f59e0b}
+.nav-links{display:flex;gap:2rem;align-items:center}
+.nav-links a{color:#94a3b8;text-decoration:none}
+.nav-links a:hover{color:#f59e0b}
+.nav-login{background:#f59e0b;color:#0f172a;padding:.5rem 1.5rem;border-radius:8px;font-weight:600}
+.search-bar{padding:1rem 2rem;background:#1e293b;border-bottom:1px solid #334155}
+.search-box{max-width:600px;margin:0 auto;display:flex;gap:.5rem}
+.search-box input{flex:1;padding:.8rem;background:#0f172a;border:1px solid #334155;border-radius:8px;color:#e2e8f0}
+.search-box button{padding:.8rem 1.5rem;background:#f59e0b;color:#0f172a;border:none;border-radius:8px;font-weight:600;cursor:pointer}
+.hero{text-align:center;padding:4rem 2rem}
+.hero h1{font-size:2.5rem;color:#f8fafc;margin-bottom:.5rem}
+.hero h1 span{color:#f59e0b}
+.hero p{font-size:1.1rem;color:#94a3b8;margin-bottom:2rem}
+.hero-cta{display:inline-block;background:#f59e0b;color:#0f172a;padding:1rem 2rem;border-radius:10px;font-size:1.1rem;font-weight:700;text-decoration:none}
+.steps{padding:3rem 2rem;text-align:center}
+.steps h2{font-size:1.8rem;color:#3b82f6;margin-bottom:2rem}
+.steps-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2rem;max-width:900px;margin:0 auto}
+.step{background:#1e293b;padding:2rem;border-radius:12px;border:1px solid #334155}
+.step-num{width:40px;height:40px;background:#3b82f6;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;margin:0 auto 1rem}
+.popular{padding:3rem 2rem;background:#1e293b}
+.popular h2{text-align:center;font-size:1.8rem;color:#f59e0b;margin-bottom:2rem}
+.parts-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;max-width:1000px;margin:0 auto}
+.part{background:#0f172a;padding:1.5rem;border-radius:10px;border:1px solid #334155;text-align:center}
+.part h3{color:#3b82f6;margin-bottom:.5rem}
+.part p{color:#94a3b8;font-size:.9rem}
+.pricing{padding:3rem 2rem;text-align:center}
+.pricing h2{font-size:1.8rem;color:#f59e0b;margin-bottom:.5rem}
+.pricing p{color:#94a3b8;margin-bottom:2rem}
+.pricing-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.5rem;max-width:1000px;margin:0 auto}
+.plan{background:#1e293b;padding:2rem;border-radius:12px;border:1px solid #334155}
+.plan.featured{border-color:#f59e0b;transform:scale(1.05)}
+.plan h3{color:#f8fafc;margin-bottom:.5rem}
+.plan .price{font-size:2rem;color:#f59e0b;font-weight:700;margin:1rem 0}
+.plan .price small{font-size:.9rem;color:#94a3b8}
+.plan ul{list-style:none;margin:1rem 0;text-align:left}
+.plan li{padding:.3rem 0;color:#94a3b8;font-size:.9rem}
+.plan li::before{content:"✓ ";color:#f59e0b}
+.plan-btn{display:block;padding:.8rem;border-radius:8px;text-decoration:none;font-weight:600;margin-top:1rem;text-align:center}
+.plan-free{background:#334155;color:#e2e8f0}
+.plan-pro{background:#f59e0b;color:#0f172a}
+.plan-team{background:#3b82f6;color:#fff}
+.plan-enterprise{background:#6366f1;color:#fff}
+.footer{text-align:center;padding:2rem;background:#1e293b;border-top:1px solid #334155;color:#64748b}
+@media(max-width:768px){.steps-grid{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
-    <header>
-        <div class="container">
-            <div class="header-content">
-                <a href="#" class="logo">Robo<span>Parts</span></a>
-            </div>
-        </div>
-    </header>
-
-    <main>
-        <section class="hero">
-            <div class="container">
-                <h1>机器人零件兼容性平台</h1>
-                <p>422+零件数据，一键查询兼容性，3D打印下载</p>
-                
-                <div class="search-container">
-                    <input type="text" class="search-box" placeholder="搜索零件名称、型号或关键词...">
-                    <button class="search-btn">搜索</button>
-                </div>
-            </div>
-        </section>
-
-        <section class="container">
-            <div class="steps">
-                <div class="step">
-                    <div class="step-number">1</div>
-                    <h3>搜索</h3>
-                    <p>输入零件名称或型号，快速找到所需零件
+<nav class="nav">
+<div class="nav-logo">🤖 RoboParts</div>
+<div class="nav-links">
+<a href="#search">搜索</a>
+<a href="#pricing">定价</a>
+<a href="#about">关于</a>
+<a href="/login" class="nav-login">登录</a>
+</div>
+</nav>
+<div class="search-bar" id="search">
+<div class="search-box">
+<input type="text" placeholder="输入零件名称或品牌查询兼容性...">
+<button>搜索</button>
+</div>
+</div>
+<section class="hero">
+<h1><span>RoboParts</span> 机器人零件兼容性平台</h1>
+<p>422+零件数据，一键查询兼容性，3D打印文件下载</p>
+<a href="#search" class="hero-cta">立即搜索</a>
+</section>
+<section class="steps">
+<h2>3步找到你的零件</h2>
+<div class="steps-grid">
+<div class="step"><div class="step-num">1</div><h3>搜索零件</h3><p>输入零件名称或品牌，查找422+零件数据</p></div>
+<div class="step"><div class="step-num">2</div><h3>查看兼容性</h3><p>系统自动显示与其他零件的兼容性矩阵</p></div>
+<div class="step"><div class="step-num">3</div><h3>下载/购买</h3><p>下载3D打印STL文件或直接购买转接件</p></div>
+</div>
+</section>
+<section class="popular">
+<h2>热门零件</h2>
+<div class="parts-grid">
+<div class="part"><h3>机械臂夹爪</h3><p>兼容6种品牌</p></div>
+<div class="part"><h3>法兰转接件</h3><p>兼容8种品牌</p></div>
+<div class="part"><h3>伺服电机</h3><p>兼容5种品牌</p></div>
+<div class="part"><h3>传感器支架</h3><p>兼容10种品牌</p></div>
+<div class="part"><h3>履带轮组</h3><p>兼容4种品牌</p></div>
+<div class="part"><h3>末端执行器</h3><p>兼容7种品牌</p></div>
+</div>
+</section>
+<section class="pricing" id="pricing">
+<h2>定价方案</h2>
+<p>选择适合你的方案</p>
+<div class="pricing-grid">
+<div class="plan">
+<h3>免费版</h3>
+<div class="price">¥0<small>/月</small></div>
+<ul><li>3次/天查询</li><li>基础兼容性信息</li><li>不支持下载</li></ul>
+<a href="/register" class="plan-btn plan-free">免费注册</a>
+</div>
+<div class="plan featured">
+<h3>专业版</h3>
+<div class="price">¥29<small>/月</small></div>
+<ul><li>无限查询</li><li>完整兼容性矩阵</li><li>STL下载（10个/月）</li><li>3D打印参数</li></ul>
+<a href="https://www.creem.io/product/prod_22YhSbYonX9hiC0OppnXTn" class="plan-btn plan-pro">立即购买</a>
+</div>
+<div class="plan">
+<h3>团队版</h3>
+<div class="price">¥99<small>/月</small></div>
+<ul><li>5人团队</li><li>无限下载</li><li>API接入</li><li>优先支持</li></ul>
+<a href="https://www.creem.io/product/prod_4EpFVQGKm5vWXChbRiFdbE" class="plan-btn plan-team">立即购买</a>
+</div>
+<div class="plan">
+<h3>企业版</h3>
+<div class="price">¥499<small>/年</small></div>
+<ul><li>不限人数</li><li>私有部署</li><li>定制零件</li><li>SLA保障</li></ul>
+<a href="https://www.creem.io/product/prod_5IooNCEQoCyqp758oeVPGT" class="plan-btn plan-enterprise">联系销售</a>
+</div>
+</div>
+</section>
+<footer class="footer">
+<p>© 2026 RoboParts · 机器人零件兼容性平台 · support@roboparts.cc</p>
+</footer>
+</body>
+</html>
