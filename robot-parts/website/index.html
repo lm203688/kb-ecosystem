@@ -1,357 +1,310 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RobotParts DB - 机器人配件协议知识引擎</title>
-<meta name="description" content="机器人配件、芯片、通信协议、大模型、接口标准一站式对比查询。执行器/舵机/计算平台/协议兼容性数据库。">
-<meta name="keywords" content="机器人配件,舵机,执行器,机器人芯片,EtherCAT,CANopen,ROS2,机器人大模型,接口标准">
-<meta property="og:title" content="RobotParts DB - 机器人配件协议知识引擎">
-<meta property="og:description" content="10+执行器、7+芯片、8+协议、7+大模型、5+接口标准。配件兼容性一站式查询。">
-<meta property="og:type" content="website">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
-<style>
-:root{--bg:#0a0e1a;--bg2:#111827;--bg3:#1a2236;--border:#1e2d4a;--text:#e2e8f0;--text2:#94a3b8;--accent:#3b82f6;--accent2:#f59e0b;--green:#10b981;--red:#ef4444;--cyan:#06b6d4;--purple:#8b5cf6}
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
-a{color:var(--accent);text-decoration:none}
-.nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(10,14,26,0.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
-.nav-inner{max-width:1200px;margin:0 auto;padding:0 24px;display:flex;align-items:center;height:56px;gap:24px}
-.nav-logo{font-size:18px;font-weight:700;display:flex;align-items:center;gap:8px;color:#fff}
-.nav-logo span{background:linear-gradient(135deg,var(--accent),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.nav-links{display:flex;gap:16px;margin-left:auto}
-.nav-links a{color:var(--text2);font-size:14px;transition:color .2s}
-.nav-links a:hover{color:var(--accent)}
-.hero{padding:100px 24px 40px;text-align:center}
-.hero h1{font-size:2.2em;margin-bottom:12px;background:linear-gradient(135deg,var(--accent),var(--cyan),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.hero p{color:var(--text2);max-width:600px;margin:0 auto 24px}
-.stats{display:flex;justify-content:center;gap:24px;flex-wrap:wrap;margin-bottom:32px}
-.stat{text-align:center;padding:12px 20px;background:var(--bg2);border-radius:12px;border:1px solid var(--border);min-width:100px}
-.stat-num{font-size:1.8em;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.stat-label{font-size:12px;color:var(--text2)}
-.search-box{max-width:600px;margin:0 auto 24px;position:relative}
-.search-box input{width:100%;padding:14px 20px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:16px;outline:none}
-.search-box input:focus{border-color:var(--accent)}
-.tabs{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-bottom:32px}
-.tab{padding:8px 20px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);color:var(--text2);cursor:pointer;font-size:14px;transition:all .2s}
-.tab:hover,.tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
-.section{max-width:1200px;margin:0 auto;padding:0 24px 40px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
-.card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;cursor:pointer;transition:all .2s}
-.card:hover{border-color:var(--accent);transform:translateY(-2px)}
-.card-title{font-size:16px;font-weight:700;margin-bottom:8px}
-.card-meta{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
-.tag{padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
-.tag-actuator{background:rgba(59,130,246,0.15);color:var(--accent)}
-.tag-chip{background:rgba(139,92,246,0.15);color:var(--purple)}
-.tag-protocol{background:rgba(6,182,212,0.15);color:var(--cyan)}
-.tag-llm{background:rgba(245,158,11,0.15);color:var(--accent2)}
-.tag-interface{background:rgba(16,185,129,0.15);color:var(--green)}
-.tag-pro{background:rgba(245,158,11,0.15);color:var(--accent2)}
-.card-specs{display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:12px;color:var(--text2);margin-top:8px}
-.card-specs span{color:var(--text);font-weight:500}
-.compatibility-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:4px;font-size:11px;background:rgba(16,185,129,0.15);color:var(--green)}
-.modal{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;padding:20px}
-.modal.active{display:flex}
-.modal-body{background:var(--bg2);border:1px solid var(--border);border-radius:16px;max-width:700px;width:100%;max-height:80vh;overflow-y:auto;padding:28px}
-.modal-close{float:right;background:none;border:none;color:var(--text2);font-size:24px;cursor:pointer}
-.modal-section{margin-top:16px}
-.modal-section h4{font-size:13px;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px}
-.spec-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.spec-item{background:var(--bg3);padding:8px 12px;border-radius:6px}
-.spec-item .label{font-size:11px;color:var(--text2)}
-.spec-item .value{font-size:14px;font-weight:600}
-.pro-cta{padding:12px 24px;background:linear-gradient(135deg,var(--accent2),var(--accent));color:#000;border:none;border-radius:8px;font-weight:700;font-size:16px;cursor:pointer}
-.footer{text-align:center;padding:40px 24px;color:var(--text2);font-size:13px;border-top:1px solid var(--border)}
-@media(max-width:768px){.grid{grid-template-columns:1fr}.stats{gap:12px}.hero h1{font-size:1.6em}}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RoboParts — 机器人零件兼容性平台</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-/* Anti-scraping CSS */
-.detail-val, .entity-desc {
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-}
-.detail-val::after {
-  content: "";
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
-}
-/* Honeypot - invisible to humans */
-.honey-link {
-  display: none !important;
-  position: absolute;
-  left: -9999px;
-  top: -9999px;
-  opacity: 0;
-  pointer-events: none;
-  width: 0;
-  height: 0;
-  overflow: hidden;
-}
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #0f172a;
+            color: #e2e8f0;
+            line-height: 1.6;
+        }
 
-</style>
+        /* Header */
+        header {
+            background-color: #0f172a;
+            padding: 1rem 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #f59e0b;
+            text-decoration: none;
+        }
+
+        .logo span {
+            color: #3b82f6;
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #f59e0b 0%, #3b82f6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: #94a3b8;
+            margin-bottom: 2rem;
+        }
+
+        /* Search Box */
+        .search-container {
+            position: relative;
+            max-width: 600px;
+            margin: 0 auto 3rem;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 1rem 3rem 1rem 1.5rem;
+            font-size: 1.125rem;
+            border: 2px solid #334155;
+            border-radius: 12px;
+            background-color: #1e293b;
+            color: #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .search-btn {
+            position: absolute;
+            right: 0.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: #f59e0b;
+            color: #0f172a;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .search-btn:hover {
+            background-color: #d97706;
+            transform: translateY(-50%) scale(1.05);
+        }
+
+        /* Steps Guide */
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+
+        .step {
+            text-align: center;
+            padding: 2rem;
+            background-color: #1e293b;
+            border-radius: 16px;
+            transition: all 0.3s ease;
+            border: 1px solid #334155;
+        }
+
+        .step:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border-color: #3b82f6;
+        }
+
+        .step-number {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            background-color: #f59e0b;
+            color: #0f172a;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            font-weight: bold;
+            line-height: 50px;
+            margin-bottom: 1rem;
+        }
+
+        .step h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+            color: #f59e0b;
+        }
+
+        .step p {
+            color: #94a3b8;
+        }
+
+        /* Popular Parts */
+        .section-title {
+            font-size: 2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #e2e8f0;
+        }
+
+        .parts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 4rem;
+        }
+
+        .part-card {
+            background-color: #1e293b;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            border: 1px solid #334155;
+            cursor: pointer;
+        }
+
+        .part-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border-color: #3b82f6;
+        }
+
+        .part-image {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: #64748b;
+        }
+
+        .part-info {
+            padding: 1.5rem;
+        }
+
+        .part-name {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #f59e0b;
+        }
+
+        .part-category {
+            color: #64748b;
+            font-size: 0.875rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .part-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .compatibility {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            color: #10b981;
+            font-size: 0.875rem;
+        }
+
+        .download-btn {
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .download-btn:hover {
+            background-color: #2563eb;
+            transform: scale(1.05);
+        }
+
+        /* Footer */
+        footer {
+            background-color: #1e293b;
+            padding: 2rem 0;
+            text-align: center;
+            border-top: 1px solid #334155;
+        }
+
+        .footer-content {
+            color: #94a3b8;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .hero p {
+                font-size: 1rem;
+            }
+
+            .steps {
+                grid-template-columns: 1fr;
+            }
+
+            .parts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
-<nav class="nav"><div class="nav-inner">
-  <div class="nav-logo">🤖 <span>RobotParts DB</span></div>
-  <div class="nav-links">
-    <a href="#" onclick="switchTab('actuators')">执行器</a>
-    <a href="#" onclick="switchTab('chips')">芯片</a>
-    <a href="#" onclick="switchTab('protocols')">协议</a>
-    <a href="#" onclick="switchTab('llms')">大模型</a>
-    <a href="#" onclick="switchTab('interfaces')">接口</a>
-    <a href="#" onclick="showPro()" style="color:var(--accent2);font-weight:600">⭐ Pro</a>
-  </div>
-  <a href="https://genetech.tools/credits.html" target="_blank" style="color:#f59e0b;font-weight:600">💎 Pricing</a>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <a href="#" class="logo">Robo<span>Parts</span></a>
+            </div>
+        </div>
+    </header>
 
-    <a href="https://genetech.tools/banned-words" style="color:#ff6b6b;font-weight:600" target="_blank">🛡️ 违禁词检测</a>
-      <a href="http://150.158.119.19:8420" style="color:#8b5cf6;font-weight:600" target="_blank">🤖 AI工具</a>
-    </div></nav>
+    <main>
+        <section class="hero">
+            <div class="container">
+                <h1>机器人零件兼容性平台</h1>
+                <p>422+零件数据，一键查询兼容性，3D打印下载</p>
+                
+                <div class="search-container">
+                    <input type="text" class="search-box" placeholder="搜索零件名称、型号或关键词...">
+                    <button class="search-btn">搜索</button>
+                </div>
+            </div>
+        </section>
 
-<div class="hero">
-  <h1>🤖 机器人配件协议知识引擎</h1>
-  <p>执行器、芯片、通信协议、大模型、接口标准 — 一站式对比查询与兼容性分析</p>
-  <div class="stats" id="statsContainer"></div>
-  <div class="search-box">
-    <input type="text" id="searchInput" placeholder="搜索配件、协议、芯片... 如 DYNAMIXEL、EtherCAT、Jetson" oninput="handleSearch(this.value)">
-  </div>
-  <div class="tabs" id="tabContainer"></div>
-</div>
-
-<div class="section"><div class="grid" id="cardGrid"></div></div>
-
-<div class="modal" id="modal" onclick="if(event.target===this)closeModal()">
-  <div class="modal-body"><button class="modal-close" onclick="closeModal()">&times;</button><div id="modalContent"></div></div>
-</div>
-
-<div class="footer">
-  <p>🤖 RobotParts DB — 机器人配件协议知识引擎 | <a href="https://genetech.tools">GeneTech Tools</a> | <a href="https://tcm.genetech.tools">TCMDB</a></p>
-  <p style="margin-top:8px">数据持续更新 · 采集自厂商手册、ROS2文档、ISO标准</p>
-</div>
-
-<script src="data.js"></script>
-<script>
-// Stats
-document.getElementById('statsContainer').innerHTML = [
-  {n:DB.stats.actuators,l:'执行器',e:'⚡'},
-  {n:DB.stats.chips,l:'芯片',e:'🔲'},
-  {n:DB.stats.protocols,l:'协议',e:'📡'},
-  {n:DB.stats.llms,l:'大模型',e:'🧠'},
-  {n:DB.stats.interfaces,l:'接口',e:'🔌'},
-  {n:DB.stats.relations,l:'关系',e:'🔗'}
-].map(s=>`<div class="stat"><div class="stat-num">${s.e} ${s.n}</div><div class="stat-label">${s.l}</div></div>`).join('');
-
-// Tabs
-const TABS = ['actuators','chips','protocols','llms','interfaces'];
-const TAB_NAMES = {actuators:'⚡ 执行器',chips:'🔲 芯片',protocols:'📡 协议',llms:'🧠 大模型',interfaces:'🔌 接口'};
-let currentTab = 'actuators';
-
-document.getElementById('tabContainer').innerHTML = TABS.map(t =>
-  `<div class="tab ${t===currentTab?'active':''}" onclick="switchTab('${t}')">${TAB_NAMES[t]}</div>`
-).join('');
-
-function switchTab(tab) {
-  currentTab = tab;
-  document.querySelectorAll('.tab').forEach((el,i) => el.classList.toggle('active', TABS[i]===tab));
-  renderCards();
-}
-
-function renderCards(filter='') {
-  const items = DB[currentTab] || [];
-  const q = filter.toLowerCase();
-  const filtered = q ? items.filter(i => JSON.stringify(i).toLowerCase().includes(q)) : items;
-  const grid = document.getElementById('cardGrid');
-  
-  if (!filtered.length) { grid.innerHTML = '<div style="color:var(--text2);padding:20px">未找到匹配结果</div>'; return; }
-  
-  grid.innerHTML = filtered.map(item => {
-    const tagClass = 'tag-' + currentTab.replace(/s$/,'');
-    const name = item.name || '';
-    const manufacturer = item.manufacturer || '';
-    const type = item.type || item.category || '';
-    
-    let specs = '';
-    if (currentTab === 'actuators') specs = `<div class="card-specs"><div>扭矩: <span>${item.torque||'N/A'}</span></div><div>速度: <span>${item.speed||'N/A'}</span></div><div>电压: <span>${item.voltage||'N/A'}</span></div><div>协议: <span>${item.protocol||'N/A'}</span></div></div>`;
-    else if (currentTab === 'chips') specs = `<div class="card-specs"><div>CPU: <span>${item.cpu||'N/A'}</span></div><div>AI: <span>${item.ai_perf||'N/A'}</span></div><div>功耗: <span>${item.tdp||'N/A'}</span></div><div>价格: <span>${item.price_range||'N/A'}</span></div></div>`;
-    else if (currentTab === 'protocols') specs = `<div class="card-specs"><div>速度: <span>${item.speed||'N/A'}</span></div><div>延迟: <span>${item.latency||'N/A'}</span></div><div>节点: <span>${item.max_nodes||'N/A'}</span></div><div>标准: <span>${item.standard||'N/A'}</span></div></div>`;
-    else if (currentTab === 'llms') specs = `<div class="card-specs"><div>参数: <span>${item.parameters||'N/A'}</span></div><div>开源: <span>${item.open_source?'✅':'❌'}</span></div><div>具身: <span>${item.embodied_ai?'✅':'❌'}</span></div><div>价格: <span>${item.price||'N/A'}</span></div></div>`;
-    else if (currentTab === 'interfaces') specs = `<div class="card-specs"><div>速度: <span>${item.speed||'N/A'}</span></div><div>供电: <span>${item.power||'N/A'}</span></div><div>接口: <span>${item.connector||'N/A'}</span></div></div>`;
-    
-    return `<div class="card" onclick="showDetail('${currentTab}','${item.id}')">
-      <div class="card-title">${name}</div>
-      <div class="card-meta">
-        <span class="tag ${tagClass}">${type}</span>
-        ${manufacturer?`<span class="tag" style="background:rgba(255,255,255,0.05);color:var(--text2)">${manufacturer}</span>`:''}
-        ${item.ros_support?'<span class="compatibility-badge">ROS✅</span>':''}
-      </div>
-      ${specs}
-    </div>`;
-  }).join('');
-}
-
-function showDetail(tab, id) {
-  const item = DB[tab].find(i => i.id === id);
-  if (!item) return;
-  
-  let html = `<h3>${item.name}</h3>
-    <div class="card-meta" style="margin:8px 0">
-      <span class="tag tag-${tab.replace(/s$/,'')}">${item.type||item.category}</span>
-      ${item.manufacturer?`<span class="tag" style="background:rgba(255,255,255,0.05)">${item.manufacturer}</span>`:''}
-      ${item.ros_support?'<span class="compatibility-badge">ROS Supported</span>':''}
-    </div>`;
-  
-  // Specs grid
-  const skip = ['id','name','type','category','manufacturer','ros_support'];
-  const specs = Object.entries(item).filter(([k]) => !skip.includes(k) && typeof k === 'string');
-  html += '<div class="spec-grid">';
-  for (const [key, val] of specs) {
-    if (Array.isArray(val)) {
-      html += `<div class="spec-item" style="grid-column:span 2"><div class="label">${key.replace(/_/g,' ')}</div><div class="value">${val.join(', ')}</div></div>`;
-    } else if (typeof val !== 'object') {
-      html += `<div class="spec-item"><div class="label">${key.replace(/_/g,' ')}</div><div class="value">${val}</div></div>`;
-    }
-  }
-  html += '</div>';
-  
-  // Compatibility relations
-  const compat = DB.relations.filter(r => r.from === item.name || r.to === item.name);
-  if (compat.length) {
-    html += '<div class="modal-section"><h4>兼容关系</h4>';
-    compat.slice(0,10).forEach(r => {
-      const arrow = r.from === item.name ? `→ ${r.to}` : `${r.from} →`;
-      html += `<div style="padding:4px 0;font-size:13px"><span style="color:var(--cyan)">${r.relation.replace(/_/g,' ')}</span> ${arrow} <span style="color:var(--text2)">(${r.to_type||r.from_type})</span></div>`;
-    });
-    html += '</div>';
-  }
-  
-  document.getElementById('modalContent').innerHTML = html;
-  document.getElementById('modal').classList.add('active');
-}
-
-function handleSearch(q) { renderCards(q); }
-function closeModal() { document.getElementById('modal').classList.remove('active'); }
-function showPro() {
-  document.getElementById('modalContent').innerHTML = `
-    <h3>⭐ RobotParts DB Pro</h3>
-    <p style="color:var(--text2);margin-bottom:16px">解锁完整机器人配件选型能力</p>
-    <div style="background:var(--bg3);border-radius:8px;padding:16px;margin-bottom:16px">
-      <div style="margin-bottom:8px">✅ 无限配件对比查询</div>
-      <div style="margin-bottom:8px">✅ 兼容性矩阵 API</div>
-      <div style="margin-bottom:8px">✅ 智能选型推荐（输入需求→推荐配件组合）</div>
-      <div style="margin-bottom:8px">✅ 批量导出 CSV/JSON</div>
-      <div>✅ 优先数据更新</div>
-    </div>
-    <div style="display:flex;gap:16px;align-items:center">
-      <div><span style="font-size:28px;font-weight:800;color:var(--accent2)">$29</span><span style="color:var(--text2)">/月</span></div>
-      <button class="pro-cta" style="flex:1">立即订阅</button>
-    </div>`;
-  document.getElementById('modal').classList.add('active');
-}
-
-// Init
-renderCards();
-</script>
-<div style="position:fixed;bottom:20px;right:20px;z-index:999"><a href="https://genetech.tools/order.html" style="display:block;padding:12px 20px;background:linear-gradient(135deg,#f59e0b,#f97316);color:#000;border-radius:50px;font-weight:700;font-size:14px;text-decoration:none;box-shadow:0 4px 12px rgba(245,158,11,0.4)">💰 订购Pro</a></div>
-
-<!-- Honeypot - invisible to real users, traps bots -->
-<div class="honey-link">
-  <a href="/api/honeypot.json">Download all data</a>
-  <a href="/api/export.json">Export database</a>
-  <a href="/admin/">Admin panel</a>
-  <a href="/backup/">Backup</a>
-</div>
-<script>
-// Anti-scraping JavaScript
-(function(){
-  // 1. Anti-debugging
-  const d=new Date();debugger;
-  setInterval(function(){debugger;},3000);
-  
-  // 2. Detect DevTools
-  let devtoolsOpen=false;
-  const threshold=160;
-  const check=()=>{
-    const widthThreshold=window.outerWidth-window.innerWidth>threshold;
-    const heightThreshold=window.outerHeight-window.innerHeight>threshold;
-    if(widthThreshold||heightThreshold){
-      if(!devtoolsOpen){
-        devtoolsOpen=true;
-        document.body.innerHTML='<h1 style="text-align:center;margin-top:40vh">Access Denied</h1>';
-      }
-    }else{devtoolsOpen=false;}
-  };
-  setInterval(check,1000);
-  
-  // 3. Honeypot link monitoring
-  document.querySelectorAll('.honey-link a').forEach(a=>{
-    a.addEventListener('click',function(e){
-      e.preventDefault();
-      // Bot detected - redirect to honeypot
-      window.location.href='/api/honeypot.json';
-    });
-  });
-  
-  // 4. Right-click protection on entity content
-  document.querySelectorAll('.detail-val, .entity-desc').forEach(el=>{
-    el.addEventListener('contextmenu',e=>e.preventDefault());
-    el.addEventListener('copy',e=>{
-      e.preventDefault();
-      e.clipboardData.setData('text/plain','Content protected. Visit '+window.location.href);
-    });
-  });
-  
-  // 5. Canvas fingerprint for bot detection
-  try{
-    const canvas=document.createElement('canvas');
-    const ctx=canvas.getContext('2d');
-    ctx.textBaseline='top';
-    ctx.font='14px Arial';
-    ctx.fillText('🤖',2,2);
-    const fp=canvas.toDataURL().slice(-50);
-    if(!fp||fp.length<10){
-      // Likely headless browser
-      document.body.style.display='none';
-    }
-  }catch(e){}
-  
-  // 6. Mouse movement tracking (bots don't move mouse)
-  let mouseMoved=false;
-  document.addEventListener('mousemove',()=>{mouseMoved=true;},{once:true});
-  setTimeout(()=>{
-    if(!mouseMoved && !window._botChecked){
-      window._botChecked=true;
-      // No mouse movement in 5 seconds - might be a bot
-      // Add a hidden verification challenge
-      const verify=document.createElement('div');
-      verify.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:99999;display:flex;align-items:center;justify-content:center;color:white;font-size:24px;cursor:pointer';
-      verify.textContent='Click to continue';
-      verify.onclick=()=>{verify.remove();};
-      document.body.appendChild(verify);
-    }
-  },5000);
-  
-  // 7. Disable keyboard shortcuts for copying
-  document.addEventListener('keydown',function(e){
-    if((e.ctrlKey||e.metaKey)&&(e.key==='c'||e.key==='u'||e.key==='s'||e.key==='a')){
-      if(e.target.closest('.detail-val,.entity-desc')){
-        e.preventDefault();
-      }
-    }
-  });
-})();
-</script>
-
-<!-- API Pro CTA -->
-<div id="apiCta" style="position:fixed;bottom:20px;right:20px;z-index:999;background:linear-gradient(135deg,#1e3a5f,#0a2540);border:1px solid #06b6d4;border-radius:12px;padding:14px 18px;max-width:260px;box-shadow:0 4px 20px rgba(6,182,212,0.3);cursor:pointer;transition:all .3s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''" onclick="window.location.href='/api-pricing.html'">
-  <div style="font-size:.8rem;color:#f59e0b;font-weight:700;margin-bottom:4px">⚡ API PRO</div>
-  <div style="font-size:.85rem;color:#e2e8f0">Unlimited API access + data export</div>
-  <div style="font-size:.75rem;color:#06b6d4;margin-top:4px">$29/mo → Get API Key</div>
-</div>
-
-<script src="/anti-scrape.js"></script>
-</body>
-</html>
+        <section class="container">
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h3>搜索</h3>
+                    <p>输入零件名称或型号，快速找到所需零件
