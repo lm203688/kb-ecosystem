@@ -1,0 +1,18 @@
+{
+  "schema_version": "v1",
+  "name_for_model": "roboparts",
+  "name_for_human": "RoboParts",
+  "description_for_model": "机器人零件兼容性平台，422+配件数据",
+  "description_for_human": "机器人零件兼容性平台，422+配件数据",
+  "api": {
+    "type": "openapi",
+    "url": "https://www.roboparts.cc/openapi.json",
+    "has_user_authentication": false
+  },
+  "usage_policy": "免费层每IP 3次/天，付费层需API Key",
+  "pricing": "免费3次/天 → ¥29/月 → ¥99/月 → ¥499/年",
+  "auth": {
+    "type": "none"
+  },
+  "contact_email": "support@aishield.tools"
+}
