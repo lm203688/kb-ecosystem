@@ -1,0 +1,13 @@
+{
+  "name": "RoboParts",
+  "description": "机器人零件兼容性平台，422+配件数据",
+  "url": "https://www.roboparts.cc",
+  "capabilities": [
+    "GET /api/entities",
+    "GET /api/entities?type=actuator",
+    "GET /api/entities/:id/stl"
+  ],
+  "pricing": "免费3次/天 → ¥29/月 → ¥99/月 → ¥499/年",
+  "authentication": "none (free tier) / API Key (paid)",
+  "contact": "support@aishield.tools"
+}
