@@ -6,6 +6,20 @@
  * 第3层：多Agent推演（4 Agent并行+共识分歧分析）
  */
 
+// 确定性随机——用参数hash做种子，同输入同输出（替代Math.random）
+function deterministicRand(seed: string): number {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = ((hash << 5) - hash) + seed.charCodeAt(i);
+    hash = hash & 0xffffffff;
+  }
+  return Math.abs(hash % 1000) / 1000;
+}
+
+function deterministicNoise(input: string, i: number, s: number): number {
+  return deterministicRand(input + '_' + i + '_' + s);
+}
+
 export interface PredictionInput {
   birthYear: number; birthMonth: number; birthDay: number; birthHour: number;
   gender: 'male' | 'female';
@@ -79,7 +93,7 @@ export class StatisticalLayer {
     for (let i = 0; i < N; i++) {
       let v = priorProb + this.gauss(0, 0.15);
       const steps = input.timeframe || 5;
-      for (let s = 0; s < steps; s++) v += 0.05*(0.5-v) + (Math.random()-0.5)*0.1;
+      for (let s = 0; s < steps; s++) v += 0.05*(0.5-v) + (deterministicNoise(input, i, s) - 0.5)*0.1;
       results.push(Math.max(0, Math.min(1, v)));
     }
     const mean = results.reduce((a,b)=>a+b,0)/N;
@@ -97,7 +111,7 @@ export class StatisticalLayer {
       predictions, confidence:0.6, consensus:1-(ciHigh-ciLow), raw:{mean,ciLow,ciHigh,N} };
   }
   private gauss(mean:number, std:number): number {
-    return mean + std * Math.sqrt(-2*Math.log(Math.random())) * Math.cos(2*Math.PI*Math.random());
+    return mean + std * Math.sqrt(-2*Math.log(deterministicRand(input+'g'))) * Math.cos(2*Math.PI*deterministicRand(input+'g2'));
   }
 }
 
@@ -112,7 +126,7 @@ export class MultiAgentLayer {
     ];
     const baseProb = stat.raw.mean || 0.5;
     const predictions: Prediction[] = agents.map(a => {
-      const p = Math.max(0.05, Math.min(0.95, baseProb + a.bias + (Math.random()-0.5)*0.16));
+      const p = Math.max(0.05, Math.min(0.95, baseProb + a.bias + (deterministicRand(input+a.name)-0.5)*0.16));
       return { outcome: `${a.name}预测`, probability:p, confidence_interval:[Math.max(0,p-0.15),Math.min(1,p+0.15)],
         reasoning: `${a.name}使用${a.method}，偏差${a.bias>0?'乐观':a.bias<0?'保守':'中性'}`, factors:[] };
     });
