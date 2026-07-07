@@ -213,6 +213,87 @@ class ResearcherAgent(BaseAgent):
         
         return {'status': 'recorded', 'task_type': task_type, 'message': '自我改进记录已保存，后续任务将参考'}
     
+    def _literature_review(self, params: dict) -> dict:
+        """文献综述——借鉴Claude-research/ai-research-skills"""
+        topic = params.get('topic', '')
+        max_papers = params.get('max_papers', 10)
+        
+        # 搜索PubMed
+        import urllib.request, json
+        papers = []
+        try:
+            url = f'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term={topic}&retmax={max_papers}&retmode=json'
+            r = urllib.request.urlopen(url, timeout=10)
+            data = json.loads(r.read())
+            pmids = data.get('esearchresult', {}).get('idlist', [])
+            
+            # 获取摘要
+            for pmid in pmids[:max_papers]:
+                try:
+                    url2 = f'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id={pmid}&retmode=json'
+                    r2 = urllib.request.urlopen(url2, timeout=5)
+                    paper = json.loads(r2.read()).get('result', {}).get(pmid, {})
+                    papers.append({
+                        'pmid': pmid,
+                        'title': paper.get('title', ''),
+                        'authors': [a.get('name','') for a in paper.get('authors', [])][:3],
+                        'journal': paper.get('fulljournalname', ''),
+                        'pubdate': paper.get('pubdate', ''),
+                    })
+                except:
+                    pass
+        except:
+            pass
+        
+        # 生成综述
+        review = f'## {topic}文献综述\n\n'
+        review += f'共检索到{len(papers)}篇相关文献。\n\n'
+        for p in papers:
+            review += f'### {p["title"]}\n'
+            review += f'- 作者: {", ".join(p["authors"])}\n'
+            review += f'- 期刊: {p["journal"]} ({p["pubdate"]})\n'
+            review += f'- PMID: {p["pmid"]}\n\n'
+        
+        return {
+            'topic': topic,
+            'paper_count': len(papers),
+            'papers': papers,
+            'review': review[:2000],
+            'method': 'PubMed文献检索+综述生成（借鉴Claude-research）'
+        }
+    
+    def _experiment_note(self, params: dict) -> dict:
+        """实验笔记——借鉴lime笔记管理"""
+        experiment_id = params.get('experiment_id', '')
+        note = params.get('note', '')
+        tags = params.get('tags', [])
+        
+        # 存储笔记
+        import os, json
+        notes_dir = os.path.join(os.path.dirname(__file__), 'db', 'notes')
+        os.makedirs(notes_dir, exist_ok=True)
+        
+        note_data = {
+            'experiment_id': experiment_id,
+            'note': note,
+            'tags': tags,
+            'timestamp': __import__('time').time(),
+        }
+        
+        note_file = os.path.join(notes_dir, f'{experiment_id}.json')
+        notes = []
+        if os.path.exists(note_file):
+            notes = json.load(open(note_file))
+        notes.append(note_data)
+        json.dump(notes, open(note_file, 'w'), ensure_ascii=False, indent=2)
+        
+        return {
+            'status': 'saved',
+            'experiment_id': experiment_id,
+            'note_count': len(notes),
+            'method': '实验笔记管理（借鉴lime）'
+        }
+    
     def _research_argument(self, params: dict) -> dict:
         """科研论证"""
         hypothesis = params.get("hypothesis", "")
