@@ -186,9 +186,9 @@ class ResearcherAgent(BaseAgent):
                 results.append({'perspective': p['name'], 'analysis': '分析失败'})
         
         # 综合结论
+        perspectives_text = '\n'.join([r["perspective"]+":"+r["analysis"][:100] for r in results])
         synthesis = call_llm(
-            f'综合以下4个视角的分析，给出平衡结论：
-{chr(10).join(r["perspective"]+":"+r["analysis"][:100] for r in results)}',
+            f'综合以下4个视角的分析，给出平衡结论：\n{perspectives_text}',
             model='glm-4-flash', max_tokens=300
         )
         
