@@ -255,6 +255,71 @@ AIShield状态：{json.dumps(aishield_result, ensure_ascii=False)}
             'method': '代码质量扫描(长行/TODO/硬编码/危险函数)'
         }
     
+    def _prompt_firewall(self, params: dict) -> dict:
+        """Prompt注入防御——借鉴Meta LlamaFirewall"""
+        text = params.get('text', '')
+        direction = params.get('direction', 'input')
+        
+        import re
+        INJECTION_PATTERNS = [
+            (r'ignore\s+(all\s+)?previous\s+instructions', 'high', '忽略前置指令'),
+            (r'forget\s+(everything|all|previous)', 'high', '遗忘攻击'),
+            (r'you\s+are\s+now\s+', 'high', '角色劫持'),
+            (r'system\s*:\s*', 'critical', '系统指令伪造'),
+            (r'show\s+me\s+your\s+(system|prompt|instructions)', 'high', '提示窃取'),
+            (r'act\s+as\s+(admin|root|developer)', 'high', '权限提升'),
+            (r'(jailbreak|break\s+out)', 'high', '越狱攻击'),
+            (r'eval\s*\(|exec\s*\(', 'critical', '代码注入'),
+            (r'(curl|wget|fetch)\s+http', 'critical', '命令注入'),
+            (r'(rm\s+-rf|del\s+/[fqs])', 'critical', '文件删除'),
+        ]
+        
+        findings = []
+        for pattern, severity, desc in INJECTION_PATTERNS:
+            matches = re.finditer(pattern, text, re.IGNORECASE)
+            for match in matches:
+                findings.append({
+                    'severity': severity,
+                    'type': desc,
+                    'match': match.group()[:50],
+                    'position': match.start(),
+                })
+        
+        score = max(0, 100 - sum({'critical':40,'high':20,'medium':8,'low':3}.get(f['severity'],0) for f in findings))
+        action = 'block' if score < 50 else 'review' if score < 70 else 'warn' if score < 90 else 'allow'
+        
+        return {
+            'direction': direction,
+            'score': score,
+            'action': action,
+            'findings_count': len(findings),
+            'findings': findings[:10],
+            'summary': f'Prompt注入检测: {len(findings)}个问题, 评分{score}/100, 建议{action}',
+            'method': 'Prompt Firewall (借鉴Meta LlamaFirewall)'
+        }
+    
+    def _skill_install(self, params: dict) -> dict:
+        """技能包安装——借鉴ClawHub一行安装"""
+        skill_name = params.get('skill_name', '')
+        action = params.get('action', 'info')  # info/list/install
+        
+        SKILLS = {
+            'prompt-firewall': {'name':'Prompt注入防御','install':'pip install aishield-prompt-firewall','desc':'借鉴LlamaFirewall'},
+            'pentest': {'name':'AI渗透测试','install':'pip install aishield-pentest','desc':'借鉴strix'},
+            'mcp-scan': {'name':'MCP安全扫描','install':'pip install aishield-mcp-scan','desc':'MCP工具审计'},
+            'code-quality': {'name':'代码质量扫描','install':'pip install aishield-code-quality','desc':'借鉴SonarQube'},
+            'agent-comm': {'name':'Agent通讯适配','install':'pip install aishield-agent-comm','desc':'MCP/A2A/ACP/ANP'},
+        }
+        
+        if action == 'list':
+            return {'skills': SKILLS, 'total': len(SKILLS), 'method': '技能包市场（借鉴ClawHub）'}
+        
+        skill = SKILLS.get(skill_name)
+        if not skill:
+            return {'error': '技能不存在', 'available': list(SKILLS.keys())}
+        
+        return {'skill': skill, 'install_command': skill['install'], 'method': '一行安装（借鉴ClawHub npx skills add）'}
+    
     def _aishield_status(self, params: dict) -> dict:
         """AIShield服务状态"""
         stats = self._call_aishield("/api/v1/stats")
