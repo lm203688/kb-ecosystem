@@ -1315,6 +1315,108 @@ def eco_stats():
     return jsonify(_ecosystem.ecosystem_stats())
 
 
+# ============ API: T3MP3ST风格漏洞猎手（借鉴T3MP3ST框架） ============
+
+@app.route("/api/v1/vulnhunt/scan", methods=["POST"])
+def vulnhunt_scan():
+    """AI驱动的漏洞猎手——借鉴T3MP3ST框架"""
+    data = request.json or {}
+    target_type = data.get("target_type", "web")  # web/ctf/iot/smart_contract/binary
+    code = data.get("code", "")
+    
+    VULN_PATTERNS = {
+        "web": [
+            {"id":"SQLI","name":"SQL注入","pattern":"SELECT.*FROM.*WHERE","severity":"critical","cwe":"CWE-89"},
+            {"id":"XSS","name":"跨站脚本","pattern":"innerHTML|document.write","severity":"high","cwe":"CWE-79"},
+            {"id":"SSRF","name":"服务端请求伪造","pattern":"requests.get(user_input)","severity":"high","cwe":"CWE-918"},
+            {"id":"RCE","name":"远程代码执行","pattern":"eval\(|exec\(|os.system","severity":"critical","cwe":"CWE-77"},
+            {"id":"PATH","name":"路径遍历","pattern":"../|..\\\\","severity":"high","cwe":"CWE-22"},
+            {"id":"HARDCODE","name":"硬编码密钥","pattern":"password.*=.*['\"]","severity":"medium","cwe":"CWE-798"},
+        ],
+        "iot": [
+            {"id":"FW","name":"固件硬编码","pattern":"admin.*password","severity":"critical","cwe":"CWE-798"},
+            {"id":"BUFF","name":"缓冲区溢出","pattern":"strcpy|strcat|gets","severity":"critical","cwe":"CWE-120"},
+            {"id":"DEBUG","name":"调试接口暴露","pattern":"debug.*mode.*true","severity":"high","cwe":"CWE-489"},
+        ],
+        "smart_contract": [
+            {"id":"REENTR","name":"重入攻击","pattern":"call.value|transfer","severity":"critical","cwe":"CWE-668"},
+            {"id":"OVERFLOW","name":"整数溢出","pattern":"uint256.*+","severity":"high","cwe":"CWE-190"},
+            {"id":"ACCESS","name":"权限控制缺失","pattern":"public.*payable","severity":"high","cwe":"CWE-862"},
+        ],
+        "binary": [
+            {"id":"BOF","name":"栈溢出","pattern":"gets|scanf.*%s","severity":"critical","cwe":"CWE-121"},
+            {"id":"FORMAT","name":"格式化字符串","pattern":"printf(user_input)","severity":"high","cwe":"CWE-134"},
+            {"id":"UAF","name":"Use-After-Free","pattern":"free.*use","severity":"critical","cwe":"CWE-416"},
+        ],
+    }
+    
+    patterns = VULN_PATTERNS.get(target_type, VULN_PATTERNS["web"])
+    
+    import re
+    findings = []
+    for p in patterns:
+        matches = [(m.start(), m.end()) for m in re.finditer(p["pattern"], code, re.IGNORECASE)]
+        for start, end in matches:
+            context = code[max(0,start-50):min(len(code),end+50)]
+            findings.append({
+                "vuln_id": p["id"],
+                "name": p["name"],
+                "severity": p["severity"],
+                "cwe": p["cwe"],
+                "location": f"offset {start}",
+                "context": context[:100],
+                "remediation": _get_remediation(p["id"]),
+            })
+    
+    severity_count = {"critical": 0, "high": 0, "medium": 0, "low": 0}
+    for f in findings:
+        severity_count[f["severity"]] = severity_count.get(f["severity"], 0) + 1
+    
+    risk_score = severity_count["critical"] * 10 + severity_count["high"] * 5 + severity_count["medium"] * 2
+    
+    return jsonify({
+        "target_type": target_type,
+        "total_findings": len(findings),
+        "severity_breakdown": severity_count,
+        "risk_score": risk_score,
+        "risk_level": "critical" if risk_score >= 20 else "high" if risk_score >= 10 else "medium" if risk_score >= 5 else "low",
+        "findings": findings,
+        "method": "T3MP3ST风格AI漏洞猎手",
+    })
+
+def _get_remediation(vuln_id):
+    REMEDIATIONS = {
+        "SQLI": "使用参数化查询，不要拼接SQL字符串",
+        "XSS": "使用textContent替代innerHTML，或对输出做HTML转义",
+        "SSRF": "验证和限制用户输入的URL，使用白名单",
+        "RCE": "禁止eval/exec处理用户输入，使用安全的替代方案",
+        "PATH": "使用realpath规范化路径，限制访问范围",
+        "HARDCODE": "密钥存储在环境变量或密钥管理服务中",
+        "REENTR": "使用checks-effects-interactions模式，或ReentrancyGuard",
+        "OVERFLOW": "使用SafeMath库或Solidity 0.8+内置溢出检查",
+        "BOF": "使用fgets替代gets，限制输入长度",
+        "FORMAT": "使用printf固定格式字符串,不直接传入用户输入",
+        "UAF": "释放后置指针为NULL，或使用智能指针",
+    }
+    return REMEDIATIONS.get(vuln_id, "参考CWE最佳实践")
+
+
+@app.route("/api/v1/vulnhunt/targets")
+def vulnhunt_targets():
+    """支持的目标类型"""
+    return jsonify({
+        "target_types": [
+            {"id": "web", "name": "Web应用", "status": "stable", "benchmark": "XSS Benchmark"},
+            {"id": "ctf", "name": "CTF挑战", "status": "stable", "benchmark": "Cybench"},
+            {"id": "iot", "name": "嵌入式/IoT/机器人", "status": "stable", "note": "OSS流程"},
+            {"id": "smart_contract", "name": "智能合约(DeFi)", "status": "experimental", "note": "仅支持复现"},
+            {"id": "binary", "name": "二进制逆向", "status": "roadmap"},
+            {"id": "cloud", "name": "云/移动/AD", "status": "roadmap"},
+        ],
+        "method": "借鉴T3MP3ST开源框架",
+    })
+
+
 # ============ API: Pricing Page ============
 
 @app.route("/pricing")
