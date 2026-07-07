@@ -1496,6 +1496,129 @@ def skillspector_patterns():
     })
 
 
+# ============ API: Agent能力（借鉴GitHub月榜项目） ============
+
+@app.route("/api/v1/codememory/stats")
+def codememory_stats():
+    """代码知识库统计——借鉴codebase-memory-mcp (27.1k)"""
+    import sys, os
+    sys.path.insert(0, '/home/z/my-project/agents/builder')
+    try:
+        from code_memory import code_memory
+        return jsonify(code_memory.get_stats())
+    except:
+        return jsonify({"error": "code_memory未初始化"})
+
+@app.route("/api/v1/codememory/query")
+def codememory_query():
+    """代码知识库查询——秒级"""
+    import sys
+    sys.path.insert(0, '/home/z/my-project/agents/builder')
+    keyword = request.args.get("q", "")
+    qtype = request.args.get("type", "symbol")
+    try:
+        from code_memory import code_memory
+        return jsonify(code_memory.query(keyword, qtype))
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+@app.route("/api/v1/agentreach/search", methods=["POST"])
+def agentreach_search():
+    """多平台搜索——借鉴Agent-Reach (51.8k)"""
+    import sys
+    sys.path.insert(0, '/home/z/my-project/agents/scout')
+    data = request.json or {}
+    try:
+        from agent_reach import agent_reach
+        result = agent_reach.search_all(data.get("query",""), data.get("platforms"), data.get("max_per_platform",3))
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+@app.route("/api/v1/trending/aggregate")
+def trending_aggregate():
+    """多平台热点汇总——借鉴taste-kill (49.5k)"""
+    import sys
+    sys.path.insert(0, '/home/z/my-project/agents/scout')
+    try:
+        from trending_aggregator import trending
+        return jsonify(trending.aggregate())
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+@app.route("/api/v1/trending/geo_opportunity")
+def trending_geo():
+    """GEO营销机会——基于热点"""
+    import sys
+    sys.path.insert(0, '/home/z/my-project/agents/scout')
+    try:
+        from trending_aggregator import trending
+        return jsonify(trending.geo_opportunity())
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+@app.route("/api/v1/video/create_pipeline", methods=["POST"])
+def video_pipeline():
+    """AI视频制作——借鉴OpenMontage (34.1k)"""
+    import sys
+    sys.path.insert(0, '/home/z/my-project/agents/game_agent')
+    data = request.json or {}
+    try:
+        from video_production import video_studio
+        result = video_studio.create_pipeline(data.get("pipeline_id","product_demo"), data.get("topic",""), data.get("duration",60))
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+@app.route("/api/v1/pm/skills")
+def pm_skills_list():
+    """PM技能市场——借鉴pm-skills (22.7k)"""
+    import sys
+    sys.path.insert(0, '/home/z/my-project/agents/strategist')
+    cat = request.args.get("category")
+    try:
+        from pm_skills import pm_skills
+        return jsonify(pm_skills.list_skills(cat))
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+@app.route("/api/v1/pm/apply", methods=["POST"])
+def pm_apply():
+    """应用PM技能"""
+    import sys
+    sys.path.insert(0, '/home/z/my-project/agents/strategist')
+    data = request.json or {}
+    try:
+        from pm_skills import pm_skills
+        return jsonify(pm_skills.apply_skill(data.get("skill_id","swot"), data.get("context","")))
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+@app.route("/api/v1/geo/strategy")
+def geo_strategy():
+    """GEO营销策略"""
+    import sys
+    sys.path.insert(0, '/home/z/my-project/marketing/geo')
+    try:
+        from geo_strategy import GEOMarketing
+        g = GEOMarketing()
+        return jsonify(g.get_strategy())
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+@app.route("/api/v1/geo/audit")
+def geo_audit():
+    """GEO审计"""
+    import sys
+    sys.path.insert(0, '/home/z/my-project/marketing/geo')
+    try:
+        from geo_strategy import GEOMarketing
+        g = GEOMarketing()
+        return jsonify(g.geo_audit())
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+
 # ============ API: Pricing Page ============
 
 @app.route("/pricing")
