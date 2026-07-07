@@ -14,6 +14,7 @@ import sys as _sys, os as _os
 _sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from agent_comm import register_agent, discover_agents, protocol_adapter, PROTOCOLS, AGENT_REGISTRY
 from prompt_firewall import scan_input, scan_output
+from agent_ecosystem import AgentEcosystem
 import sys as _sys
 _sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from agent_comm import register_agent, discover_agents, protocol_adapter, PROTOCOLS, AGENT_REGISTRY
@@ -978,6 +979,7 @@ def prompt_firewall_scan_both():
 
 # 任务存储
 TASKS = {}
+_ecosystem = AgentEcosystem()
 
 @app.route("/api/v1/tasks/post", methods=["POST"])
 def post_task():
@@ -1215,6 +1217,102 @@ def arena_leaderboard():
             tops[bm] = results[0]
     
     return jsonify({"leaderboards": ARENA_RESULTS, "tops": tops, "total_benchmarks": len(ARENA_RESULTS)})
+
+
+# ============ API: Agent生态 (5层架构) ============
+
+@app.route("/api/v1/ecosystem/register", methods=["POST"])
+def eco_register():
+    """Agent注册——身份层"""
+    data = request.json or {}
+    agent = _ecosystem.register_agent(
+        data.get("agent_id", ""),
+        data.get("name", ""),
+        data.get("capabilities", []),
+        data.get("endpoint", ""),
+        data.get("protocol", "MCP"),
+        data.get("metadata", {}),
+    )
+    return jsonify({"status": "registered", "agent": agent})
+
+@app.route("/api/v1/ecosystem/agents")
+def eco_agents():
+    """Agent列表——发现层"""
+    capability = request.args.get("capability")
+    min_rep = int(request.args.get("min_reputation", 0))
+    agents = _ecosystem.list_agents(capability, min_rep)
+    return jsonify({"agents": agents, "total": len(agents)})
+
+@app.route("/api/v1/ecosystem/agent/<agent_id>")
+def eco_agent_detail(agent_id):
+    """Agent详情+统计"""
+    stats = _ecosystem.get_agent_stats(agent_id)
+    return jsonify(stats)
+
+@app.route("/api/v1/ecosystem/tasks/post", methods=["POST"])
+def eco_post_task():
+    """发布任务——发现层"""
+    data = request.json or {}
+    task = _ecosystem.post_task(
+        data.get("title", ""),
+        data.get("description", ""),
+        data.get("budget", 0),
+        data.get("task_type", "audit"),
+        data.get("requirements", []),
+        data.get("deadline", ""),
+    )
+    return jsonify({"status": "posted", "task": task})
+
+@app.route("/api/v1/ecosystem/tasks")
+def eco_tasks():
+    """开放任务列表"""
+    task_type = request.args.get("type")
+    tasks = _ecosystem.list_open_tasks(task_type)
+    return jsonify({"tasks": tasks, "total": len(tasks)})
+
+@app.route("/api/v1/ecosystem/tasks/bid", methods=["POST"])
+def eco_bid():
+    """Agent竞价"""
+    data = request.json or {}
+    bid = _ecosystem.bid_task(
+        data.get("task_id", ""),
+        data.get("agent_id", ""),
+        data.get("price", 0),
+        data.get("eta_hours", 24),
+        data.get("proposal", ""),
+    )
+    return jsonify(bid)
+
+@app.route("/api/v1/ecosystem/tasks/assign", methods=["POST"])
+def eco_assign():
+    """分配任务"""
+    data = request.json or {}
+    result = _ecosystem.assign_task(data.get("task_id", ""), data.get("agent_id", ""))
+    return jsonify(result)
+
+@app.route("/api/v1/ecosystem/tasks/complete", methods=["POST"])
+def eco_complete():
+    """完成任务——信誉更新+支付"""
+    data = request.json or {}
+    task_id = data.get("task_id", "")
+    agent_id = data.get("agent_id", "")
+    result = data.get("result", "success")
+    amount = data.get("amount", 0)
+    review = data.get("review", "")
+    rating = data.get("rating", 5)
+    
+    rep = _ecosystem.update_reputation(agent_id, result, review, rating)
+    if amount > 0:
+        txn = _ecosystem.process_payment(task_id, amount, data.get("from_user", ""), agent_id)
+    else:
+        txn = None
+    
+    return jsonify({"status": "completed", "reputation": rep, "transaction": txn})
+
+@app.route("/api/v1/ecosystem/stats")
+def eco_stats():
+    """生态全局统计"""
+    return jsonify(_ecosystem.ecosystem_stats())
 
 
 # ============ API: Pricing Page ============
