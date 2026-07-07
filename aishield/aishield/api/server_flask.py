@@ -1619,6 +1619,66 @@ def geo_audit():
         return jsonify({"error": str(e)})
 
 
+# ============ API: AI抓取+Token优化（借鉴ScrapeGraphAI + RTK） ============
+
+@app.route("/api/v1/scrape/url", methods=["POST"])
+def scrape_url():
+    """AI驱动网页抓取——借鉴ScrapeGraphAI"""
+    import sys
+    sys.path.insert(0, '/home/z/my-project/agents/shared')
+    data = request.json or {}
+    try:
+        from ai_scrape import ai_scrape
+        result = ai_scrape.scrape(data.get("url",""), data.get("rule"))
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+@app.route("/api/v1/scrape/entities", methods=["POST"])
+def scrape_entities():
+    """从网页提取实体"""
+    import sys
+    sys.path.insert(0, '/home/z/my-project/agents/shared')
+    data = request.json or {}
+    try:
+        from ai_scrape import ai_scrape
+        result = ai_scrape.extract_entities(data.get("url",""), data.get("entity_type"))
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+@app.route("/api/v1/token/optimize", methods=["POST"])
+def token_optimize():
+    """Token优化——借鉴RTK (rust-token-killer) 减少60-90%token"""
+    import sys
+    sys.path.insert(0, '/home/z/my-project/agents/shared')
+    data = request.json or {}
+    try:
+        from token_optimizer import token_optimizer
+        result = token_optimizer.optimize(data.get("text",""))
+        return jsonify({
+            "original_tokens": result["original_tokens"],
+            "optimized_tokens": result["optimized_tokens"],
+            "token_reduction": result["token_reduction"],
+            "tokens_saved": result["tokens_saved"],
+            "optimized_text": result["optimized_text"],
+            "method": result["method"],
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+@app.route("/api/v1/token/stats")
+def token_stats():
+    """Token优化器统计"""
+    import sys
+    sys.path.insert(0, '/home/z/my-project/agents/shared')
+    try:
+        from token_optimizer import token_optimizer
+        return jsonify(token_optimizer.get_stats())
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+
 # ============ API: Pricing Page ============
 
 @app.route("/pricing")
