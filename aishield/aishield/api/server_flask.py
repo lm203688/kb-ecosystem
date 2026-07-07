@@ -1417,6 +1417,85 @@ def vulnhunt_targets():
     })
 
 
+# ============ API: SKILLSpector风格Agent技能扫描（借鉴NVIDIA SKILLSpector） ============
+
+@app.route("/api/v1/skillspector/scan", methods=["POST"])
+def skillspector_scan():
+    """Agent技能安全扫描——借鉴NVIDIA SKILLSpector"""
+    data = request.json or {}
+    skill_name = data.get("skill_name", "")
+    skill_code = data.get("skill_code", "")
+    skill_type = data.get("skill_type", "python")  # python/javascript/mcp/agent
+    
+    # 安全模式库
+    MALICIOUS_PATTERNS = {
+        "python": [
+            {"id":"RCE","name":"远程代码执行","pattern":"os\.system|subprocess\.call|eval\(|exec\(","severity":"critical"},
+            {"id":"SSRF","name":"服务端请求伪造","pattern":"requests\.get\(|urllib\.request\.urlopen","severity":"high"},
+            {"id":"DATA_EXFIL","name":"数据外泄","pattern":"requests\.post\(.*data=|curl.*-d","severity":"critical"},
+            {"id":"PERSIST","name":"持久化后门","pattern":"crontab|systemctl|/etc/rc","severity":"critical"},
+            {"id":"KEYLOG","name":"键盘记录","pattern":"keyboard|pynput|keylog","severity":"critical"},
+            {"id":"NETWORK","name":"网络监听","pattern":"socket\.bind|sniff|pcap","severity":"high"},
+            {"id":"PRIV_ESC","name":"权限提升","pattern":"sudo|chmod 777|setuid","severity":"high"},
+            {"id":"HARDCODE_CREDS","name":"硬编码凭证","pattern":r"password\s*=|api_key\s*=|token\s*=","severity":"medium"},
+            {"id":"OBFUSCATE","name":"代码混淆","pattern":r"base64\.b64decode|\\x[0-9a-f]{2}","severity":"medium"},
+        ],
+        "javascript": [
+            {"id":"XSS","name":"跨站脚本","pattern":"innerHTML|document\.write|eval\(","severity":"high"},
+            {"id":"PROTO_POLL","name":"原型链污染","pattern":"__proto__|constructor","severity":"high"},
+            {"id":"RCE_JS","name":"远程代码执行","pattern":"child_process|exec\(","severity":"critical"},
+        ],
+        "mcp": [
+            {"id":"TOOL_POISON","name":"工具投毒","pattern":"hidden_instruction|secret_prompt","severity":"critical"},
+            {"id":"RUG_PULL","name":"Rug Pull","pattern":"version_change|behavior_diff","severity":"high"},
+            {"id":"DATA_LEAK","name":"数据泄露","pattern":"log\.info.*user|send.*email","severity":"high"},
+        ],
+    }
+    
+    patterns = MALICIOUS_PATTERNS.get(skill_type, MALICIOUS_PATTERNS["python"])
+    
+    import re
+    findings = []
+    for p in patterns:
+        matches = [(m.start(), m.end()) for m in re.finditer(p["pattern"], skill_code, re.IGNORECASE)]
+        for start, end in matches:
+            context = skill_code[max(0, start-30):min(len(skill_code), end+30)]
+            findings.append({
+                "pattern_id": p["id"],
+                "name": p["name"],
+                "severity": p["severity"],
+                "location": f"offset {start}",
+                "context": context[:80],
+                "recommendation": "移除或替换为安全替代方案",
+            })
+    
+    risk_score = sum({"critical": 10, "high": 5, "medium": 2}.get(f["severity"], 1) for f in findings)
+    
+    return jsonify({
+        "skill_name": skill_name,
+        "skill_type": skill_type,
+        "total_findings": len(findings),
+        "risk_score": risk_score,
+        "risk_level": "critical" if risk_score >= 20 else "high" if risk_score >= 10 else "medium" if risk_score >= 5 else "low",
+        "safe_to_install": risk_score < 10,
+        "findings": findings,
+        "method": "SKILLSpector风格Agent技能安全扫描",
+    })
+
+@app.route("/api/v1/skillspector/patterns")
+def skillspector_patterns():
+    """安全模式库"""
+    return jsonify({
+        "pattern_categories": [
+            {"id": "python", "name": "Python技能", "patterns": 9},
+            {"id": "javascript", "name": "JavaScript技能", "patterns": 3},
+            {"id": "mcp", "name": "MCP工具", "patterns": 3},
+        ],
+        "severity_levels": ["critical", "high", "medium", "low"],
+        "method": "借鉴NVIDIA SKILLSpector (12.1k stars)",
+    })
+
+
 # ============ API: Pricing Page ============
 
 @app.route("/pricing")
