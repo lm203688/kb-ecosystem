@@ -25,6 +25,8 @@ class ScoutAgent(BaseAgent):
                 "intel_search": self._intel_search,
                 "competitor_watch": self._competitor_watch,
                 "trend_analysis": self._trend_analysis,
+                "trend_clustering": self._trend_clustering,
+                "research_trending": self._research_trending,
                 "kb_search": self._kb_search,
                 "daily_brief": self._daily_brief,
                 "health_check": lambda p: self.health_check(),
