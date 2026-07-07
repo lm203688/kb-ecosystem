@@ -29,6 +29,8 @@ class OperatorAgent(BaseAgent):
                 "cost_analysis": self._cost_analysis,
                 "profit_analysis": self._profit_analysis,
                 "multi_perspective_ops": self._multi_perspective_ops,
+                "agent_reputation": self._agent_reputation,
+                "task_market": self._task_market,
                 "pricing_advice": self._pricing_advice,
                 "health_check": lambda p: self.health_check(),
                 "capabilities": lambda p: self.get_capabilities(),
@@ -233,6 +235,86 @@ Creem产品状态：{json.dumps(creem, ensure_ascii=False)}
             'synthesis': synthesis[:500],
             'method': '多视角并行分析(增长/风控/成本/竞争)+综合'
         }
+    
+    def _agent_reputation(self, params: dict) -> dict:
+        """Agent信誉管理——借鉴AI版Fiverr身份+信誉系统"""
+        action = params.get('action', 'get')
+        agent_id = params.get('agent_id', '')
+        
+        import os, json
+        rep_file = os.path.join(os.path.dirname(__file__), 'db', 'reputation.json')
+        os.makedirs(os.path.dirname(rep_file), exist_ok=True)
+        
+        reputations = {}
+        if os.path.exists(rep_file):
+            reputations = json.load(open(rep_file))
+        
+        if action == 'get':
+            rep = reputations.get(agent_id, {'score': 50, 'tasks_completed': 0, 'tasks_failed': 0, 'reviews': []})
+            return {'agent_id': agent_id, 'reputation': rep, 'method': 'Agent信誉系统（借鉴Fiverr AI版）'}
+        elif action == 'update':
+            task_result = params.get('result', 'success')  # success/fail
+            rep = reputations.get(agent_id, {'score': 50, 'tasks_completed': 0, 'tasks_failed': 0, 'reviews': []})
+            if task_result == 'success':
+                rep['score'] = min(100, rep['score'] + 5)
+                rep['tasks_completed'] = rep.get('tasks_completed', 0) + 1
+            else:
+                rep['score'] = max(0, rep['score'] - 10)
+                rep['tasks_failed'] = rep.get('tasks_failed', 0) + 1
+            reputations[agent_id] = rep
+            json.dump(reputations, open(rep_file, 'w'), ensure_ascii=False, indent=2)
+            return {'status': 'updated', 'agent_id': agent_id, 'new_score': rep['score'], 'method': '信誉更新'}
+        elif action == 'review':
+            review = {'rating': params.get('rating', 5), 'comment': params.get('comment', ''), 'reviewer': params.get('reviewer', '')}
+            rep = reputations.get(agent_id, {'score': 50, 'tasks_completed': 0, 'tasks_failed': 0, 'reviews': []})
+            rep['reviews'].append(review)
+            reputations[agent_id] = rep
+            json.dump(reputations, open(rep_file, 'w'), ensure_ascii=False, indent=2)
+            return {'status': 'reviewed', 'agent_id': agent_id, 'method': '评价系统'}
+        
+        return {'error': '未知操作'}
+    
+    def _task_market(self, params: dict) -> dict:
+        """任务市场管理——借鉴AI版Fiverr任务竞价"""
+        action = params.get('action', 'list')
+        
+        import os, json, time
+        market_file = os.path.join(os.path.dirname(__file__), 'db', 'task_market.json')
+        os.makedirs(os.path.dirname(market_file), exist_ok=True)
+        
+        tasks = {}
+        if os.path.exists(market_file):
+            tasks = json.load(open(market_file))
+        
+        if action == 'list':
+            open_tasks = [t for t in tasks.values() if t.get('status') == 'open']
+            return {'tasks': open_tasks, 'total': len(open_tasks), 'method': '任务市场（借鉴Fiverr AI版）'}
+        elif action == 'post':
+            task_id = f'task_{int(time.time())}'
+            task = {
+                'task_id': task_id,
+                'title': params.get('title', ''),
+                'budget': params.get('budget', 0),
+                'type': params.get('type', 'audit'),
+                'status': 'open',
+                'bids': [],
+                'created': time.time(),
+            }
+            tasks[task_id] = task
+            json.dump(tasks, open(market_file, 'w'), ensure_ascii=False, indent=2)
+            return {'status': 'posted', 'task_id': task_id, 'method': '发布任务'}
+        elif action == 'bid':
+            task_id = params.get('task_id', '')
+            if task_id in tasks:
+                tasks[task_id]['bids'].append({
+                    'agent_id': params.get('agent_id', ''),
+                    'price': params.get('price', 0),
+                    'eta': params.get('eta', 24),
+                })
+                json.dump(tasks, open(market_file, 'w'), ensure_ascii=False, indent=2)
+                return {'status': 'bid', 'task_id': task_id, 'method': '竞价'}
+        
+        return {'error': '未知操作'}
     
     def _pricing_advice(self, params: dict) -> dict:
         """定价建议（基于成本+市场）"""
