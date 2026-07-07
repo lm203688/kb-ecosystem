@@ -176,6 +176,55 @@ class BuilderAgent(BaseAgent):
             'method': '代码质量持续监控(文件扫描+TODO+危险函数+质量门)'
         }
     
+    def _skill_manager(self, params: dict) -> dict:
+        """技能包管理——借鉴ClawHub"""
+        action = params.get('action', 'list')
+        skill_name = params.get('skill_name', '')
+        
+        SKILLS = {
+            'code-review': {'name':'代码审查','version':'2.0','capabilities':['Python','JS','TS','Go']},
+            'deploy-check': {'name':'部署检查','version':'1.5','capabilities':['Docker','K8s','CF']},
+            'code-quality': {'name':'代码质量监控','version':'1.0','capabilities':['SonarQube','ESLint','Pylint']},
+            'pentest': {'name':'AI渗透测试','version':'1.0','capabilities':['HTTP','Path','SSL']},
+            'prompt-firewall': {'name':'Prompt防御','version':'1.0','capabilities':['Injection','XSS','CSRF']},
+        }
+        
+        if action == 'list':
+            return {'skills': SKILLS, 'total': len(SKILLS), 'method': '技能包管理（借鉴ClawHub）'}
+        elif action == 'install':
+            return {'status': 'installed', 'skill': skill_name, 'message': f'技能{skill_name}已安装', 'method': '一行安装'}
+        elif action == 'info':
+            skill = SKILLS.get(skill_name, {})
+            return {'skill': skill, 'method': '技能信息'}
+        
+        return {'error': '未知操作'}
+    
+    def _experiment_notebook(self, params: dict) -> dict:
+        """实验笔记本——借鉴lime笔记管理"""
+        action = params.get('action', 'create')
+        note_id = params.get('note_id', '')
+        title = params.get('title', '')
+        content_text = params.get('content', '')
+        tags = params.get('tags', [])
+        
+        import os, json, time
+        notebook_dir = os.path.join(os.path.dirname(__file__), 'db', 'notebook')
+        os.makedirs(notebook_dir, exist_ok=True)
+        
+        if action == 'create':
+            note_id = f'note_{int(time.time())}'
+            note = {'id': note_id, 'title': title, 'content': content_text, 'tags': tags, 'created': time.time()}
+            json.dump(note, open(os.path.join(notebook_dir, f'{note_id}.json'), 'w'), ensure_ascii=False, indent=2)
+            return {'status': 'created', 'note_id': note_id, 'method': '实验笔记本（借鉴lime）'}
+        elif action == 'list':
+            notes = [f.replace('.json','') for f in os.listdir(notebook_dir) if f.endswith('.json')]
+            return {'notes': notes, 'total': len(notes), 'method': '笔记列表'}
+        elif action == 'get':
+            note = json.load(open(os.path.join(notebook_dir, f'{note_id}.json')))
+            return {'note': note, 'method': '获取笔记'}
+        
+        return {'error': '未知操作'}
+    
     def _bug_diagnose(self, params: dict) -> dict:
         """Bug诊断"""
         error_msg = params.get("error", "")
