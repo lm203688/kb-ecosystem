@@ -28,6 +28,10 @@ class BuilderAgent(BaseAgent):
                 "tech_audit": self._tech_audit,
                 "architecture_advice": self._architecture_advice,
                 "bug_diagnose": self._bug_diagnose,
+                "auto_document": self._auto_document,
+                "skill_manager": self._skill_manager,
+                "notebook": self._experiment_notebook,
+                "continuous_quality": self._continuous_quality,
                 "health_check": lambda p: self.health_check(),
                 "capabilities": lambda p: self.get_capabilities(),
                 "register_project": lambda p: self.register_project(p["project_id"], p["name"], p.get("profile", "")),
@@ -136,6 +140,45 @@ class BuilderAgent(BaseAgent):
         final = synthesize(results, requirement)
         return {"architecture_advice": final, "models_used": list(results.keys())}
 
+    def _auto_document(self, params: dict) -> dict:
+        """自动文档生成——借鉴LangChain OpenWiki"""
+        project_dir = params.get('project_dir', '')
+        doc_type = params.get('doc_type', 'readme')
+        auto_update = params.get('auto_update', True)
+        
+        import os, re
+        
+        results = {'files_scanned': 0, 'functions_found': 0, 'classes_found': 0, 'docs_generated': []}
+        
+        if not project_dir or not os.path.exists(project_dir):
+            return {'error': '目录不存在', 'dir': project_dir}
+        
+        for root, dirs, files in os.walk(project_dir):
+            dirs[:] = [d for d in dirs if d not in ['node_modules', '.git', '__pycache__', '.venv']]
+            for fname in files:
+                if fname.endswith('.py'):
+                    fpath = os.path.join(root, fname)
+                    results['files_scanned'] += 1
+                    try:
+                        code = open(fpath, errors='replace').read()
+                        results['functions_found'] += len(re.findall(r'^\s*def\s+', code, re.MULTILINE))
+                        results['classes_found'] += len(re.findall(r'^\s*class\s+', code, re.MULTILINE))
+                    except:
+                        pass
+        
+        doc_path = os.path.join(project_dir, f'{doc_type.upper()}_AUTO.md')
+        doc_content = f'# 自动文档\n\n扫描{results["files_scanned"]}个文件, {results["functions_found"]}个函数, {results["classes_found"]}个类\n'
+        open(doc_path, 'w').write(doc_content)
+        
+        return {
+            'status': 'generated',
+            'doc_type': doc_type,
+            'doc_path': doc_path,
+            'stats': results,
+            'auto_update': auto_update,
+            'method': '自动文档生成（借鉴OpenWiki）',
+        }
+    
     def _continuous_quality(self, params: dict) -> dict:
         """代码质量持续监控 — 借鉴SonarQube DataCenter"""
         project = params.get('project', '')
