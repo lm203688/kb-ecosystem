@@ -1855,7 +1855,7 @@ def atex_payment_callback():
     atex_signature = data.get("atex_signature", "")
     
     # 简单验证
-    if atex_signature != "atex_deploy_2026":
+    if atex_signature != os.environ.get("ATEX_DEPLOY_TOKEN", "atex_deploy_2026"):
         return jsonify({"success": False, "detail": "无效签名"}), 403
     
     orders = load_orders()
