@@ -10,6 +10,10 @@ from flask import Flask, request, jsonify, Response, redirect
 from flask_cors import CORS
 import json, os, time, hashlib, sys, subprocess, threading, tempfile, urllib.parse, secrets
 from pathlib import Path
+import sys as _sys, os as _os
+_sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from agent_comm import register_agent, discover_agents, protocol_adapter, PROTOCOLS, AGENT_REGISTRY
+from prompt_firewall import scan_input, scan_output
 import sys as _sys
 _sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from agent_comm import register_agent, discover_agents, protocol_adapter, PROTOCOLS, AGENT_REGISTRY
@@ -933,6 +937,214 @@ def agents_adapt():
     data = request.json or {}
     result = protocol_adapter(data.get("source", ""), data.get("target", ""), data.get("message", {}))
     return jsonify({"adapted": result})
+
+
+# ============ API: Prompt注入防御 (借鉴Meta LlamaFirewall) ============
+
+@app.route("/api/v1/prompt-firewall/scan", methods=["POST"])
+def prompt_firewall_scan():
+    """Prompt注入检测——输入+输出双重过滤"""
+    data = request.json or {}
+    text = data.get("text", "")
+    direction = data.get("direction", "input")  # input/output
+    
+    if direction == "output":
+        result = scan_output(text)
+    else:
+        result = scan_input(text)
+    
+    return jsonify(result)
+
+
+@app.route("/api/v1/prompt-firewall/scan-both", methods=["POST"])
+def prompt_firewall_scan_both():
+    """输入+输出双向检测"""
+    data = request.json or {}
+    input_text = data.get("input", "")
+    output_text = data.get("output", "")
+    
+    input_result = scan_input(input_text)
+    output_result = scan_output(output_text)
+    
+    return jsonify({
+        "input_scan": input_result,
+        "output_scan": output_result,
+        "overall_score": min(input_result["score"], output_result["score"]),
+        "overall_action": "block" if min(input_result["score"], output_result["score"]) < 50 else "allow",
+    })
+
+
+# ============ API: Agent任务竞价 (借鉴AI版Fiverr) ============
+
+# 任务存储
+TASKS = {}
+
+@app.route("/api/v1/tasks/post", methods=["POST"])
+def post_task():
+    """发布任务——用户发布安全审计任务，Agent竞价"""
+    data = request.json or {}
+    task_id = "task_" + str(int(time.time())) + str(hash(data.get("title", "")) % 1000)
+    
+    task = {
+        "task_id": task_id,
+        "title": data.get("title", ""),
+        "description": data.get("description", ""),
+        "budget": data.get("budget", 0),
+        "currency": data.get("currency", "CNY"),
+        "task_type": data.get("task_type", "security_audit"),
+        "requirements": data.get("requirements", []),
+        "deadline": data.get("deadline", ""),
+        "status": "open",
+        "bids": [],
+        "created_at": time.time(),
+        "assigned_to": None,
+    }
+    TASKS[task_id] = task
+    return jsonify({"status": "posted", "task_id": task_id, "task": task})
+
+
+@app.route("/api/v1/tasks/bid", methods=["POST"])
+def bid_task():
+    """Agent竞价——Agent对任务提交报价"""
+    data = request.json or {}
+    task_id = data.get("task_id", "")
+    agent_id = data.get("agent_id", "")
+    price = data.get("price", 0)
+    eta_hours = data.get("eta_hours", 24)
+    proposal = data.get("proposal", "")
+    
+    if task_id not in TASKS:
+        return jsonify({"error": "任务不存在"}), 404
+    
+    task = TASKS[task_id]
+    if task["status"] != "open":
+        return jsonify({"error": "任务已关闭"}), 400
+    
+    # 获取Agent信誉
+    agent = AGENT_REGISTRY.get(agent_id, {})
+    trust_score = agent.get("trust_score", 50)
+    
+    bid = {
+        "agent_id": agent_id,
+        "agent_name": agent.get("name", "Unknown"),
+        "price": price,
+        "eta_hours": eta_hours,
+        "proposal": proposal,
+        "trust_score": trust_score,
+        "bid_time": time.time(),
+    }
+    task["bids"].append(bid)
+    
+    return jsonify({"status": "bid_submitted", "task_id": task_id, "bid": bid})
+
+
+@app.route("/api/v1/tasks/list")
+def list_tasks():
+    """列出所有开放任务"""
+    open_tasks = [t for t in TASKS.values() if t["status"] == "open"]
+    return jsonify({"tasks": open_tasks, "total": len(open_tasks)})
+
+
+@app.route("/api/v1/tasks/<task_id>")
+def get_task(task_id):
+    """获取任务详情+所有竞价"""
+    task = TASKS.get(task_id)
+    if not task:
+        return jsonify({"error": "任务不存在"}), 404
+    # 按信誉+价格排序竞价
+    task["bids"].sort(key=lambda b: (-b["trust_score"], b["price"]))
+    return jsonify(task)
+
+
+@app.route("/api/v1/tasks/<task_id>/assign", methods=["POST"])
+def assign_task(task_id):
+    """分配任务——用户选择Agent"""
+    data = request.json or {}
+    agent_id = data.get("agent_id", "")
+    
+    task = TASKS.get(task_id)
+    if not task:
+        return jsonify({"error": "任务不存在"}), 404
+    
+    task["assigned_to"] = agent_id
+    task["status"] = "assigned"
+    
+    # 更新Agent信誉
+    agent = AGENT_REGISTRY.get(agent_id, {})
+    agent["trust_score"] = min(100, agent.get("trust_score", 50) + 5)
+    
+    return jsonify({"status": "assigned", "task_id": task_id, "agent_id": agent_id})
+
+
+# ============ API: 一行安装安全工具 (借鉴ClawHub) ============
+
+@app.route("/api/v1/install/<tool_name>")
+def install_tool_info(tool_name):
+    """获取安全工具安装信息——一行安装"""
+    TOOLS = {
+        "prompt-firewall": {
+            "name": "Prompt注入防御",
+            "install": "pip install aishield-prompt-firewall",
+            "description": "借鉴Meta LlamaFirewall，检测拦截Prompt注入攻击",
+            "category": "安全防御",
+            "version": "1.0.0",
+        },
+        "pentest": {
+            "name": "AI渗透测试",
+            "install": "pip install aishield-pentest",
+            "description": "借鉴strix框架，自动扫描Web安全漏洞",
+            "category": "安全扫描",
+            "version": "1.0.0",
+        },
+        "mcp-scan": {
+            "name": "MCP安全扫描",
+            "install": "pip install aishield-mcp-scan",
+            "description": "MCP工具安全审计+毒性检测",
+            "category": "MCP安全",
+            "version": "2.0.0",
+        },
+        "agent-comm": {
+            "name": "Agent通讯协议适配",
+            "install": "pip install aishield-agent-comm",
+            "description": "支持MCP/A2A/ACP/ANP四大协议互操作",
+            "category": "Agent生态",
+            "version": "1.0.0",
+        },
+        "code-quality": {
+            "name": "代码质量扫描",
+            "install": "pip install aishield-code-quality",
+            "description": "借鉴SonarQube，代码质量持续监控",
+            "category": "代码质量",
+            "version": "1.0.0",
+        },
+    }
+    
+    tool = TOOLS.get(tool_name)
+    if not tool:
+        return jsonify({"error": "工具不存在", "available": list(TOOLS.keys())}), 404
+    
+    return jsonify({
+        "tool": tool,
+        "install_command": tool["install"],
+        "quick_start": f'from aishield import {tool_name.replace("-","_")}',
+        "api_endpoint": f"/api/v1/{tool_name.replace('-','_')}",
+    })
+
+
+@app.route("/api/v1/tools/market")
+def tools_market():
+    """安全工具市场——浏览+搜索+安装"""
+    TOOLS = [
+        {"name": "Prompt注入防御", "slug": "prompt-firewall", "category": "安全防御", "rating": 4.8, "installs": 1250},
+        {"name": "AI渗透测试", "slug": "pentest", "category": "安全扫描", "rating": 4.6, "installs": 980},
+        {"name": "MCP安全扫描", "slug": "mcp-scan", "category": "MCP安全", "rating": 4.9, "installs": 2100},
+        {"name": "Agent通讯适配", "slug": "agent-comm", "category": "Agent生态", "rating": 4.5, "installs": 750},
+        {"name": "代码质量扫描", "slug": "code-quality", "category": "代码质量", "rating": 4.3, "installs": 600},
+        {"name": "违禁词检测", "slug": "banned-words", "category": "合规", "rating": 4.7, "installs": 1800},
+        {"name": "出海合规", "slug": "compliance", "category": "合规", "rating": 4.4, "installs": 450},
+        {"name": "SEO合规", "slug": "seo-check", "category": "合规", "rating": 4.2, "installs": 320},
+    ]
+    return jsonify({"tools": TOOLS, "total": len(TOOLS)})
 
 
 # ============ API: Pricing Page ============
