@@ -181,6 +181,38 @@ class ScoutAgent(BaseAgent):
             'method': f'K-means聚类(k={k})+时序趋势分析'
         }
     
+    def _research_trending(self, params: dict) -> dict:
+        """科研趋势榜单——借鉴AI科研工具榜"""
+        category = params.get('category', 'all')  # all/agent/notebook/literature
+        
+        import urllib.request, json
+        trending = []
+        
+        # GitHub trending
+        try:
+            url = 'https://api.github.com/search/repositories?q=AI+research+science+agent&sort=stars&order=desc&per_page=10'
+            req = urllib.request.Request(url, headers={'User-Agent': 'ScoutAgent/1.0'})
+            r = urllib.request.urlopen(req, timeout=10)
+            data = json.loads(r.read())
+            for repo in data.get('items', [])[:10]:
+                trending.append({
+                    'name': repo['full_name'],
+                    'stars': repo['stargazers_count'],
+                    'description': repo.get('description', '')[:80],
+                    'url': repo['html_url'],
+                    'language': repo.get('language', ''),
+                    'category': 'research',
+                })
+        except:
+            pass
+        
+        return {
+            'category': category,
+            'trending': trending[:10],
+            'total': len(trending),
+            'method': 'GitHub科研趋势榜单（借鉴AI科研工具榜）'
+        }
+    
     def _daily_brief(self, params: dict) -> dict:
         """每日简报 — 扫描多领域"""
         fields = params.get("fields", ["CRISPR", "AI Agent", "机器人", "核能", "量子计算"])
