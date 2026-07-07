@@ -1147,6 +1147,76 @@ def tools_market():
     return jsonify({"tools": TOOLS, "total": len(TOOLS)})
 
 
+# ============ API: Agent盲测擂台 (借鉴Berkeley Arena) ============
+
+ARENA_BENCHMARKS = {
+    "security_audit": {"name": "安全审计", "tasks": 20, "description": "MCP工具安全审计准确率"},
+    "prompt_injection": {"name": "Prompt注入检测", "tasks": 15, "description": "注入攻击检测召回率"},
+    "code_review": {"name": "代码审查", "tasks": 25, "description": "代码漏洞发现率"},
+    "compliance": {"name": "合规检测", "tasks": 10, "description": "合规问题识别率"},
+}
+
+ARENA_RESULTS = {}
+
+@app.route("/api/v1/arena/benchmarks")
+def arena_benchmarks():
+    """获取所有基准测试"""
+    return jsonify({"benchmarks": ARENA_BENCHMARKS, "total": len(ARENA_BENCHMARKS)})
+
+@app.route("/api/v1/arena/submit", methods=["POST"])
+def arena_submit():
+    """提交Agent评测结果"""
+    data = request.json or {}
+    agent_id = data.get("agent_id", "")
+    benchmark = data.get("benchmark", "")
+    score = data.get("score", 0)
+    tasks_completed = data.get("tasks_completed", 0)
+    
+    if benchmark not in ARENA_BENCHMARKS:
+        return jsonify({"error": "基准测试不存在"}), 404
+    
+    result = {
+        "agent_id": agent_id,
+        "benchmark": benchmark,
+        "score": score,
+        "tasks_completed": tasks_completed,
+        "submitted_at": time.time(),
+    }
+    
+    if benchmark not in ARENA_RESULTS:
+        ARENA_RESULTS[benchmark] = []
+    ARENA_RESULTS[benchmark].append(result)
+    # 按分数排名
+    ARENA_RESULTS[benchmark].sort(key=lambda x: -x["score"])
+    
+    rank = next(i+1 for i, r in enumerate(ARENA_RESULTS[benchmark]) if r["agent_id"] == agent_id)
+    
+    return jsonify({
+        "status": "submitted",
+        "agent_id": agent_id,
+        "benchmark": benchmark,
+        "score": score,
+        "rank": rank,
+        "total_agents": len(ARENA_RESULTS[benchmark]),
+    })
+
+@app.route("/api/v1/arena/leaderboard")
+def arena_leaderboard():
+    """获取排行榜"""
+    benchmark = request.args.get("benchmark", "")
+    
+    if benchmark and benchmark in ARENA_RESULTS:
+        return jsonify({"benchmark": benchmark, "leaderboard": ARENA_RESULTS[benchmark][:10]})
+    
+    # 所有基准的top1
+    tops = {}
+    for bm, results in ARENA_RESULTS.items():
+        if results:
+            tops[bm] = results[0]
+    
+    return jsonify({"leaderboards": ARENA_RESULTS, "tops": tops, "total_benchmarks": len(ARENA_RESULTS)})
+
+
 # ============ API: Pricing Page ============
 
 @app.route("/pricing")
