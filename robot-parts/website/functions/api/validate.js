@@ -3,7 +3,7 @@
  * Validates Creem license keys without exposing API key to client
  */
 
-const CREEM_API_KEY = 'creem_4yM8aDDK17QiHjWdiWgQEA';
+const CREEM_API_KEY = typeof env !== 'undefined' ? (env.CREEM_API_KEY || '') : '';
 const PRO_PRODUCTS = [
   'prod_22YhSbYonX9hiC0OppnXTn',
   'prod_4EpFVQGKm5vWXChbRiFdbE',
