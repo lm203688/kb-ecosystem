@@ -1,0 +1,36 @@
+# 环境变量
+.env
+.env.*
+!.env.example
+
+# 密钥
+*.pem
+*.key
+*.p12
+*.pfx
+
+# 敏感配置
+secrets.json
+config/local.json
+
+# 依赖
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# 构建产物
+.next/
+dist/
+build/
+
+# 编辑器
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 系统
+.DS_Store
+Thumbs.db
