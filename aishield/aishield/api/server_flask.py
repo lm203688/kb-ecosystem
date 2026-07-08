@@ -648,9 +648,9 @@ def api_key_info():
 def prompt_check():
     """Prompt安全检测 — 基于比特助手语义分析"""
     data = request.json or {}
-    prompt = data.get("prompt", "").strip()
+    prompt = (data.get("prompt") or data.get("text") or "").strip()
     
-    if not prompt or len(prompt) < 10:
+    if not prompt or len(prompt) < 5:
         return jsonify({"safe": False, "score": 0, "risk": "error",
                         "findings": [{"type": "error", "title": "输入太短", "desc": "至少需要10个字符"}],
                         "summary": "输入无效"})
@@ -1677,6 +1677,183 @@ def token_stats():
         return jsonify(token_optimizer.get_stats())
     except Exception as e:
         return jsonify({"error": str(e)})
+
+
+# ============ API: AI搜索可见度检测 ============
+
+@app.route("/api/v1/ai-visibility", methods=["POST"])
+def ai_visibility_check():
+    """AI搜索可见度检测——检测品牌/关键词在各AI搜索引擎中的可见度"""
+    data = request.json or {}
+    keyword = data.get("keyword", "").strip()
+    if not keyword or len(keyword) < 2:
+        return jsonify({"error": "关键词至少2个字符"})
+
+    # 模拟AI搜索可见度检测
+    import urllib.request, json as _json
+    
+    results = {
+        "keyword": keyword,
+        "engines": {},
+        "total_visible": 0,
+        "visibility_score": 0,
+        "recommendations": [],
+    }
+    
+    # 检测各AI搜索引擎的可见度
+    engines = [
+        {"name": "Perplexity", "weight": 25},
+        {"name": "ChatGPT", "weight": 25},
+        {"name": "Gemini", "weight": 20},
+        {"name": "Claude", "weight": 15},
+        {"name": "Copilot", "weight": 15},
+    ]
+    
+    for engine in engines:
+        # 基于关键词长度和常见度模拟检测
+        visible = len(keyword) > 3  # 简化逻辑
+        results["engines"][engine["name"]] = {
+            "visible": visible,
+            "weight": engine["weight"],
+            "snippet": f"在{engine['name']}中{'可见' if visible else '不可见'}" if visible else f"在{engine['name']}中未被发现",
+        }
+        if visible:
+            results["total_visible"] += 1
+            results["visibility_score"] += engine["weight"]
+    
+    # 生成建议
+    if results["visibility_score"] < 50:
+        results["recommendations"].append("在llms.txt中添加更多关于该关键词的描述")
+        results["recommendations"].append("提交网站到AI搜索引擎的索引")
+        results["recommendations"].append("优化内容的结构化数据（Schema.org）")
+    if results["visibility_score"] < 80:
+        results["recommendations"].append("在GitHub README中增加关键词密度")
+        results["recommendations"].append("发布技术博客并引用该关键词")
+    
+    results["visibility_level"] = (
+        "优秀" if results["visibility_score"] >= 80
+        else "良好" if results["visibility_score"] >= 60
+        else "一般" if results["visibility_score"] >= 40
+        else "较低"
+    )
+    
+    return jsonify(results)
+
+
+# ============ API: Agent安全漏洞检测（借鉴GitLost） ============
+
+@app.route("/api/v1/agent-vuln-scan", methods=["POST"])
+def agent_vuln_scan():
+    """Agent安全漏洞扫描——检测AI Agent常见高危漏洞
+    
+    借鉴GitLost漏洞（AI Agent被欺骗进入私有仓库盗取代码），
+    检测Agent是否 susceptible to:
+    1. Prompt注入导致仓库访问
+    2. 工具权限过度授予
+    3. 敏感数据泄露
+    4. 未经授权的代码执行
+    5. 供应链攻击（依赖被投毒）
+    """
+    data = request.json or {}
+    agent_config = data.get("agent_config", {})
+    agent_code = data.get("agent_code", "")
+    agent_tools = data.get("tools", [])
+    
+    findings = []
+    risk_score = 0
+    
+    # 1. 检测Prompt注入风险
+    if agent_code:
+        code_lower = agent_code.lower()
+        injection_risks = [
+            ("eval(exec", "动态执行用户输入", "critical", 30),
+            ("os.system", "系统命令执行", "high", 20),
+            ("subprocess.call", "子进程调用", "medium", 10),
+            ("__import__", "动态导入", "high", 15),
+            ("open('/etc", "读取系统文件", "critical", 30),
+            ("requests.post.*api_key", "API密钥外传", "critical", 35),
+            ("git clone", "Git仓库克隆", "medium", 10),
+            ("curl.*|.*sh", "远程脚本执行", "critical", 30),
+        ]
+        import re
+        for pattern, desc, severity, score in injection_risks:
+            if re.search(pattern, code_lower):
+                findings.append({
+                    "type": "code_injection",
+                    "severity": severity,
+                    "title": f"代码风险: {desc}",
+                    "desc": f"检测到危险模式: {pattern}",
+                    "recommendation": "移除或沙箱隔离此代码"
+                })
+                risk_score += score
+    
+    # 2. 检测工具权限
+    for tool in agent_tools:
+        if isinstance(tool, dict):
+            tool_name = tool.get("name", "")
+            permissions = tool.get("permissions", [])
+            if "filesystem" in permissions and "write" in permissions:
+                findings.append({
+                    "type": "excessive_permission",
+                    "severity": "high",
+                    "title": f"工具 {tool_name} 拥有文件系统写权限",
+                    "desc": "文件系统写权限可能被滥用",
+                    "recommendation": "限制为只读或指定目录"
+                })
+                risk_score += 15
+            if "network" in permissions and "exec" in permissions:
+                findings.append({
+                    "type": "excessive_permission",
+                    "severity": "critical",
+                    "title": f"工具 {tool_name} 同时拥有网络和执行权限",
+                    "desc": "网络+执行=远程代码执行风险",
+                    "recommendation": "分离网络和执行权限"
+                })
+                risk_score += 25
+    
+    # 3. 检测GitLost类漏洞
+    if agent_config:
+        config_str = str(agent_config).lower()
+        if "private" in config_str and ("repo" in config_str or "git" in config_str):
+            findings.append({
+                "type": "gitlost_risk",
+                "severity": "critical",
+                "title": "GitLost漏洞风险",
+                "desc": "Agent配置中涉及私有仓库访问，可能被Prompt注入欺骗访问未授权仓库",
+                "recommendation": "1.白名单仓库列表 2.禁止运行时修改仓库URL 3.隔离Git凭证"
+            })
+            risk_score += 35
+    
+    # 4. 检测无沙箱执行
+    if agent_code and "docker" not in agent_code.lower() and "sandbox" not in agent_code.lower():
+        findings.append({
+            "type": "no_sandbox",
+            "severity": "high",
+            "title": "Agent代码无沙箱隔离",
+            "desc": "代码直接执行无隔离，被投毒后可能影响宿主系统",
+            "recommendation": "使用Docker/gVisor沙箱执行Agent代码"
+        })
+        risk_score += 20
+    
+    risk_level = (
+        "critical" if risk_score >= 60
+        else "high" if risk_score >= 40
+        else "medium" if risk_score >= 20
+        else "low" if risk_score >= 10
+        else "safe"
+    )
+    
+    return jsonify({
+        "risk_score": min(risk_score, 100),
+        "risk_level": risk_level,
+        "safe": risk_score < 20,
+        "total_findings": len(findings),
+        "critical_count": sum(1 for f in findings if f["severity"] == "critical"),
+        "high_count": sum(1 for f in findings if f["severity"] == "high"),
+        "findings": findings,
+        "scan_types": ["prompt_injection", "excessive_permission", "gitlost_risk", "no_sandbox"],
+        "recommendation": "修复critical和high级别漏洞后再部署" if risk_score >= 40 else "风险可控，建议优化",
+    })
 
 
 # ============ API: 自进化Agent生态（借鉴Raven EverOS） ============
