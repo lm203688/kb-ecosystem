@@ -165,3 +165,167 @@ class WorldModel:
 
 causal_engine = CausalEngine()
 world_model = WorldModel()
+
+
+class MIRAWorldModel:
+    """MIRA式可玩世界模型——借鉴MIRA(20FPS实时生成)
+    
+    在蜂群科研中实现：
+    1. 实时交互式虚拟实验
+    2. 多Agent协同推演（模拟多玩家）
+    3. 基于机器人数据的物理约束
+    """
+    
+    def __init__(self):
+        self.sessions = {}  # 实验会话
+        self.fps = 20  # 20FPS实时交互
+        self.player_count = 0  # 多Agent协同
+    
+    def create_session(self, experiment_name, reaction_type, conditions):
+        """创建实时实验会话"""
+        session = {
+            'name': experiment_name,
+            'reaction_type': reaction_type,
+            'conditions': conditions,
+            'step': 0,
+            'state': 'initialized',
+            'agents': [],  # 参与的Agent
+            'history': [],
+            'fps': self.fps,
+        }
+        self.sessions[experiment_name] = session
+        return session
+    
+    def add_agent(self, session_name, agent_id, role):
+        """添加Agent到实验会话（多Agent协同）"""
+        session = self.sessions.get(session_name)
+        if not session:
+            return {'error': '会话不存在'}
+        
+        session['agents'].append({
+            'agent_id': agent_id,
+            'role': role,  # collector/analyzer/miner/validator/writer/reviewer
+            'status': 'active',
+        })
+        self.player_count += 1
+        return {'status': 'added', 'total_agents': len(session['agents'])}
+    
+    def realtime_step(self, session_name, action=None):
+        """实时推进一步——20FPS"""
+        session = self.sessions.get(session_name)
+        if not session:
+            return {'error': '会话不存在'}
+        
+        session['step'] += 1
+        
+        # 模拟实时实验推进
+        result = {
+            'step': session['step'],
+            'fps': self.fps,
+            'agents_active': len(session['agents']),
+            'conditions': session['conditions'],
+            'state': self._compute_state(session),
+            'timestamp': session['step'] * (1000 / self.fps),  # ms
+        }
+        
+        if action:
+            result['action_applied'] = action
+            session['conditions'].update(action)
+        
+        session['history'].append(result)
+        return result
+    
+    def _compute_state(self, session):
+        """计算当前实验状态"""
+        import math
+        temp = session['conditions'].get('temperature', 350)
+        ea = session['conditions'].get('activation_energy', 40)
+        R = 8.314e-3
+        k = math.exp(-ea / (R * temp))
+        return {
+            'rate_constant': round(k, 6),
+            'conversion': round(min(1.0, k * session['step'] * 0.05), 2),
+            'yield': round(min(0.95, k * 100 * 0.3), 2),
+            'energy': round(-R * temp * math.log(max(k, 1e-10)), 2),
+        }
+    
+    def get_session(self, session_name):
+        """获取会话状态"""
+        return self.sessions.get(session_name, {'error': '不存在'})
+
+
+class CometWorkflow:
+    """Comet式可恢复AI工作流——5阶段
+    
+    将AI编码任务拆分为：开启→设计→构建→验证→归档
+    每个阶段可恢复，任务中断后可从断点继续
+    """
+    
+    STAGES = ['initiate', 'design', 'build', 'validate', 'archive']
+    
+    def __init__(self):
+        self.workflows = {}  # 工作流状态
+    
+    def create(self, task_name, task_desc):
+        """创建工作流"""
+        wf = {
+            'name': task_name,
+            'desc': task_desc,
+            'stage': 'initiate',
+            'stage_history': [],
+            'checkpoints': {},
+            'status': 'active',
+            'created_at': time.time(),
+        }
+        self.workflows[task_name] = wf
+        return wf
+    
+    def advance(self, task_name, stage_data=None):
+        """推进到下一阶段"""
+        wf = self.workflows.get(task_name)
+        if not wf:
+            return {'error': '工作流不存在'}
+        
+        current_idx = self.STAGES.index(wf['stage'])
+        if current_idx >= len(self.STAGES) - 1:
+            wf['status'] = 'completed'
+            return {'status': 'completed', 'workflow': wf}
+        
+        # 保存检查点
+        wf['checkpoints'][wf['stage']] = stage_data or {}
+        wf['stage_history'].append({'stage': wf['stage'], 'time': time.time(), 'data': stage_data})
+        
+        # 推进到下一阶段
+        wf['stage'] = self.STAGES[current_idx + 1]
+        return {'status': 'advanced', 'new_stage': wf['stage'], 'workflow': wf}
+    
+    def recover(self, task_name):
+        """从断点恢复"""
+        wf = self.workflows.get(task_name)
+        if not wf:
+            return {'error': '工作流不存在'}
+        
+        last_checkpoint = wf['checkpoints'].get(wf['stage'])
+        return {
+            'status': 'recovered',
+            'current_stage': wf['stage'],
+            'checkpoint': last_checkpoint,
+            'stages_completed': len(wf['stage_history']),
+            'stages_remaining': len(self.STAGES) - self.STAGES.index(wf['stage']) - 1,
+        }
+    
+    def get_status(self, task_name):
+        """获取工作流状态"""
+        wf = self.workflows.get(task_name)
+        if not wf:
+            return {'error': '不存在'}
+        return {
+            'name': wf['name'],
+            'current_stage': wf['stage'],
+            'progress': f'{self.STAGES.index(wf["stage"])}/{len(self.STAGES)-1}',
+            'stages_completed': [h['stage'] for h in wf['stage_history']],
+            'status': wf['status'],
+        }
+
+mira_world = MIRAWorldModel()
+comet_workflow = CometWorkflow()
