@@ -1679,6 +1679,106 @@ def token_stats():
         return jsonify({"error": str(e)})
 
 
+# ============ API: 自进化Agent生态（借鉴Raven EverOS） ============
+
+@app.route("/api/v1/evolution/stats")
+def evolution_stats():
+    """自进化生态系统统计"""
+    import sys
+    sys.path.insert(0, '/home/z/my-project/agents/shared')
+    try:
+        from self_evolution import evolution_system
+        return jsonify(evolution_system.ecosystem_stats())
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+@app.route("/api/v1/evolution/agents")
+def evolution_agents():
+    """列出所有自进化Agent"""
+    import sys
+    sys.path.insert(0, '/home/z/my-project/agents/shared')
+    try:
+        from self_evolution import evolution_system
+        return jsonify({"agents": list(evolution_system.agents.values()), "total": len(evolution_system.agents)})
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+@app.route("/api/v1/evolution/skills", methods=["GET", "POST"])
+def evolution_skills():
+    """技能市场——GET列表/POST分享"""
+    import sys
+    sys.path.insert(0, '/home/z/my-project/agents/shared')
+    if request.method == "GET":
+        try:
+            from self_evolution import evolution_system
+            return jsonify({"skills": list(evolution_system.skills_market.values()), "total": len(evolution_system.skills_market)})
+        except Exception as e:
+            return jsonify({"error": str(e)})
+    else:
+        data = request.json or {}
+        try:
+            from self_evolution import evolution_system
+            result = evolution_system.share_skill(data.get("agent_id",""), data.get("skill_name",""), data.get("skill_code",""), data.get("description",""))
+            return jsonify(result)
+        except Exception as e:
+            return jsonify({"error": str(e)})
+
+@app.route("/api/v1/evolution/learn", methods=["POST"])
+def evolution_learn():
+    """Agent学习技能"""
+    import sys
+    sys.path.insert(0, '/home/z/my-project/agents/shared')
+    data = request.json or {}
+    try:
+        from self_evolution import evolution_system
+        result = evolution_system.learn_skill(data.get("agent_id",""), data.get("skill_id",""), data.get("adaptation"))
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+@app.route("/api/v1/evolution/evolve", methods=["POST"])
+def evolution_evolve():
+    """Agent自进化"""
+    import sys
+    sys.path.insert(0, '/home/z/my-project/agents/shared')
+    data = request.json or {}
+    try:
+        from self_evolution import evolution_system
+        result = evolution_system.evolve(data.get("agent_id",""), data.get("improvement",""))
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+@app.route("/api/v1/evolution/collaborate", methods=["POST"])
+def evolution_collaborate():
+    """Agent协作"""
+    import sys
+    sys.path.insert(0, '/home/z/my-project/agents/shared')
+    data = request.json or {}
+    try:
+        from self_evolution import evolution_system
+        result = evolution_system.collaborate(data.get("agent_ids",[]), data.get("task",""))
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+
+# ============ API: Agent沙箱安全（借鉴CubeSandbox） ============
+
+@app.route("/api/v1/sandbox/assess", methods=["POST"])
+def sandbox_assess():
+    """Agent沙箱安全评估"""
+    import sys
+    sys.path.insert(0, '/home/z/my-project/aishield/aishield/api')
+    data = request.json or {}
+    try:
+        from agent_sandbox import agent_sandbox
+        result = agent_sandbox.assess(data)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+
 # ============ API: Pricing Page ============
 
 @app.route("/pricing")
