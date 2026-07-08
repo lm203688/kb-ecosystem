@@ -1,0 +1,290 @@
+{
+  "skills": {
+    "literature": [
+      {
+        "id": "lit_search",
+        "name": "文献检索",
+        "desc": "多数据库检索"
+      },
+      {
+        "id": "lit_review",
+        "name": "文献综述",
+        "desc": "自动综述生成"
+      },
+      {
+        "id": "lit_summarize",
+        "name": "论文摘要",
+        "desc": "快速摘要论文"
+      },
+      {
+        "id": "citation",
+        "name": "引文管理",
+        "desc": "引用格式化"
+      },
+      {
+        "id": "plagiarism",
+        "name": "查重检测",
+        "desc": "相似度检测"
+      },
+      {
+        "id": "arxiv_search",
+        "name": "arXiv检索",
+        "desc": "预印本搜索"
+      },
+      {
+        "id": "pubmed_search",
+        "name": "PubMed检索",
+        "desc": "生物医学文献"
+      },
+      {
+        "id": "semantic_scholar",
+        "name": "语义学术",
+        "desc": "AI驱动学术搜索"
+      },
+      {
+        "id": "openalex",
+        "name": "OpenAlex",
+        "desc": "开放学术数据"
+      },
+      {
+        "id": "connected_papers",
+        "name": "关联论文",
+        "desc": "论文关系图谱"
+      }
+    ],
+    "writing": [
+      {
+        "id": "paper_draft",
+        "name": "论文起草",
+        "desc": "AI辅助初稿"
+      },
+      {
+        "id": "paper_polish_en",
+        "name": "英文润色",
+        "desc": "学术英语润色"
+      },
+      {
+        "id": "paper_polish_zh",
+        "name": "中文润色",
+        "desc": "中文学术润色"
+      },
+      {
+        "id": "deai_latex",
+        "name": "去AI味LaTeX",
+        "desc": "去除AI痕迹"
+      },
+      {
+        "id": "deai_word",
+        "name": "去AI味Word",
+        "desc": "去除AI痕迹"
+      },
+      {
+        "id": "abstract_write",
+        "name": "摘要撰写",
+        "desc": "论文摘要生成"
+      },
+      {
+        "id": "intro_write",
+        "name": "引言撰写",
+        "desc": "引言部分"
+      },
+      {
+        "id": "method_write",
+        "name": "方法撰写",
+        "desc": "实验方法描述"
+      },
+      {
+        "id": "result_write",
+        "name": "结果撰写",
+        "desc": "结果描述"
+      },
+      {
+        "id": "discussion_write",
+        "name": "讨论撰写",
+        "desc": "讨论部分"
+      },
+      {
+        "id": "conclusion_write",
+        "name": "结论撰写",
+        "desc": "结论部分"
+      },
+      {
+        "id": "rebuttal",
+        "name": "Rebuttal",
+        "desc": "审稿回复"
+      },
+      {
+        "id": "cover_letter",
+        "name": "投稿信",
+        "desc": "Cover letter"
+      }
+    ],
+    "data": [
+      {
+        "id": "data_clean",
+        "name": "数据清洗",
+        "desc": "缺失值/异常值"
+      },
+      {
+        "id": "data_explore",
+        "name": "探索分析",
+        "desc": "EDA可视化"
+      },
+      {
+        "id": "stat_test",
+        "name": "统计检验",
+        "desc": "t检验/方差分析"
+      },
+      {
+        "id": "regression",
+        "name": "回归分析",
+        "desc": "线性/逻辑回归"
+      },
+      {
+        "id": "ml_train",
+        "name": "机器学习",
+        "desc": "模型训练"
+      },
+      {
+        "id": "data_viz",
+        "name": "数据可视化",
+        "desc": "图表生成"
+      },
+      {
+        "id": "table_gen",
+        "name": "表格生成",
+        "desc": "学术论文表格"
+      },
+      {
+        "id": "figure_gen",
+        "name": "图表生成",
+        "desc": "科研绘图"
+      }
+    ],
+    "experiment": [
+      {
+        "id": "exp_design",
+        "name": "实验设计",
+        "desc": "DOE设计"
+      },
+      {
+        "id": "exp_optimize",
+        "name": "实验优化",
+        "desc": "贝叶斯优化"
+      },
+      {
+        "id": "dmtl",
+        "name": "DMTL闭环",
+        "desc": "设计-制造-测试-学习"
+      },
+      {
+        "id": "reaction_predict",
+        "name": "反应预测",
+        "desc": "产物预测"
+      },
+      {
+        "id": "yield_predict",
+        "name": "产率预测",
+        "desc": "产率估算"
+      },
+      {
+        "id": "admet",
+        "name": "ADMET",
+        "desc": "药物性质预测"
+      },
+      {
+        "id": "retrosynthesis",
+        "name": "逆合成",
+        "desc": "合成路线"
+      },
+      {
+        "id": "molecule_gen",
+        "name": "分子生成",
+        "desc": "AI分子设计"
+      }
+    ],
+    "coding": [
+      {
+        "id": "code_gen",
+        "name": "代码生成",
+        "desc": "实验代码"
+      },
+      {
+        "id": "code_review",
+        "name": "代码审查",
+        "desc": "质量检查"
+      },
+      {
+        "id": "debug",
+        "name": "调试",
+        "desc": "Bug修复"
+      },
+      {
+        "id": "refactor",
+        "name": "重构",
+        "desc": "代码优化"
+      },
+      {
+        "id": "document",
+        "name": "文档生成",
+        "desc": "代码文档"
+      },
+      {
+        "id": "test_gen",
+        "name": "测试生成",
+        "desc": "单元测试"
+      }
+    ],
+    "collaboration": [
+      {
+        "id": "meeting_notes",
+        "name": "组会记录",
+        "desc": "会议纪要"
+      },
+      {
+        "id": "file_organize",
+        "name": "文件管理",
+        "desc": "项目归档"
+      },
+      {
+        "id": "task_track",
+        "name": "任务追踪",
+        "desc": "进度管理"
+      },
+      {
+        "id": "peer_review",
+        "name": "同行评审",
+        "desc": "模拟审稿"
+      },
+      {
+        "id": "presentation",
+        "name": "演示文稿",
+        "desc": "PPT生成"
+      },
+      {
+        "id": "poster",
+        "name": "海报制作",
+        "desc": "学术海报"
+      },
+      {
+        "id": "grant_write",
+        "name": "基金申请",
+        "desc": "项目书撰写"
+      },
+      {
+        "id": "patent_write",
+        "name": "专利撰写",
+        "desc": "专利申请"
+      }
+    ]
+  },
+  "total": 53,
+  "categories": [
+    "literature",
+    "writing",
+    "data",
+    "experiment",
+    "coding",
+    "collaboration"
+  ]
+}
