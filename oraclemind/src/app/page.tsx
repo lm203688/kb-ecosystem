@@ -45,11 +45,11 @@ const STRENGTH_BADGE: Record<string, { label: string; color: string }> = {
 };
 
 const ELEMENT_DISPLAY: Record<string, { chinese: string; label: string; color: string; icon: React.ReactNode }> = {
-  wood: { chinese: '木', label: 'Wood', color: 'text-[oklch(0.72_0.16_145)]', icon: <Leaf className="size-3" /> },
-  fire: { chinese: '火', label: 'Fire', color: 'text-[oklch(0.72_0.18_25)]', icon: <Flame className="size-3" /> },
-  earth: { chinese: '土', label: 'Earth', color: 'text-[oklch(0.78_0.14_75)]', icon: <Mountain className="size-3" /> },
-  metal: { chinese: '金', label: 'Metal', color: 'text-[oklch(0.75_0.03_265)]', icon: <Swords className="size-3" /> },
-  water: { chinese: '水', label: 'Water', color: 'text-[oklch(0.68_0.12_240)]', icon: <Droplets className="size-3" /> },
+  wood: { chinese: '木', label: '木', color: 'text-[oklch(0.72_0.16_145)]', icon: <Leaf className="size-3" /> },
+  fire: { chinese: '火', label: '火', color: 'text-[oklch(0.72_0.18_25)]', icon: <Flame className="size-3" /> },
+  earth: { chinese: '土', label: '土', color: 'text-[oklch(0.78_0.14_75)]', icon: <Mountain className="size-3" /> },
+  metal: { chinese: '金', label: '金', color: 'text-[oklch(0.75_0.03_265)]', icon: <Swords className="size-3" /> },
+  water: { chinese: '水', label: '水', color: 'text-[oklch(0.68_0.12_240)]', icon: <Droplets className="size-3" /> },
 };
 
 /* ── Main Page ── */
@@ -175,11 +175,11 @@ export default function Home() {
                   {/* Tabs — minimal pill style */}
                   <TabsList className="w-full justify-start gap-1 rounded-lg border border-[oklch(1_0_0_/6%)] bg-[oklch(0.12_0.015_265)] p-1">
                     {[
-                      { value: 'overview', icon: <LayoutDashboard className="size-3.5" />, label: 'Overview' },
+                      { value: 'overview', icon: <LayoutDashboard className="size-3.5" />, label: '总览' },
                       { value: 'chat', icon: <MessageSquare className="size-3.5" />, label: 'AI Chat' },
                       { value: 'luck', icon: <Clock className="size-3.5" />, label: 'Luck Pillars' },
-                      { value: 'pricing', icon: <Coins className="size-3.5" />, label: 'Pricing' },
-                      { value: 'trust', icon: <ShieldCheck className="size-3.5" />, label: 'Trust' },
+                      { value: 'pricing', icon: <Coins className="size-3.5" />, label: '定价' },
+                      { value: 'trust', icon: <ShieldCheck className="size-3.5" />, label: '信任' },
                     ].map((tab) => (
                       <TabsTrigger
                         key={tab.value}
