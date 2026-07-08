@@ -86,3 +86,70 @@ class AestheticSkill:
         }
 
 aesthetic = AestheticSkill()
+
+
+class PenpotDesignCoder:
+    """Penpot式设计→代码能力
+    
+    借鉴Penpot(50.6K stars开源设计平台)：
+    - 设计直接输出代码
+    - 告别手动标注
+    - AI就绪的设计系统
+    """
+    
+    def __init__(self):
+        self.design_tokens = {
+            'colors': {
+                'primary': '#6366f1',
+                'secondary': '#10b981',
+                'background': '#0a0a0f',
+                'surface': '#12121a',
+                'text': '#e0e0e8',
+                'text_dim': '#8888a0',
+            },
+            'spacing': [4, 8, 12, 16, 24, 32, 48, 64],
+            'radius': [4, 8, 12, 16],
+            'fonts': {
+                'sans': 'system-ui, sans-serif',
+                'mono': 'monospace',
+            },
+        }
+    
+    def design_to_html(self, design_spec):
+        """设计规格→HTML代码"""
+        components = []
+        for comp in design_spec.get('components', []):
+            if comp['type'] == 'card':
+                components.append(self._card_html(comp))
+            elif comp['type'] == 'button':
+                components.append(self._button_html(comp))
+            elif comp['type'] == 'nav':
+                components.append(self._nav_html(comp))
+        
+        return f'''<!DOCTYPE html>
+<html>
+<head>
+<style>
+* {{ margin:0; padding:0; box-sizing:border-box }}
+body {{ background:{self.design_tokens['colors']['background']}; color:{self.design_tokens['colors']['text']}; font-family:{self.design_tokens['fonts']['sans']} }}
+</style>
+</head>
+<body>
+{chr(10).join(components)}
+</body>
+</html>'''
+    
+    def _card_html(self, comp):
+        return f'''<div style="background:{self.design_tokens['colors']['surface']};border-radius:{self.design_tokens['radius'][2]}px;padding:{self.design_tokens['spacing'][4]}px">
+<h3>{comp.get('title','')}</h3>
+<p>{comp.get('desc','')}</p>
+</div>'''
+    
+    def _button_html(self, comp):
+        return f'''<button style="background:{self.design_tokens['colors']['primary']};color:#fff;border:none;padding:{self.design_tokens['spacing'][2]}px {self.design_tokens['spacing'][4]}px;border-radius:{self.design_tokens['radius'][1]}px;cursor:pointer">{comp.get('label','按钮')}</button>'''
+    
+    def _nav_html(self, comp):
+        links = ''.join(f'<a href="#" style="color:{self.design_tokens["colors"]["text_dim"]};text-decoration:none;margin-right:{self.design_tokens["spacing"][4]}px">{link}</a>' for link in comp.get('links', []))
+        return f'''<nav style="display:flex;align-items:center;padding:{self.design_tokens["spacing"][3]}px">{links}</nav>'''
+
+penpot_coder = PenpotDesignCoder()
